@@ -100,7 +100,8 @@ class KtProtoBuilderInspection(@JvmField var avoidThisExpression: Boolean = fals
         builder.append(precedingCommentBlock.block)
         builder.append("\n")
       }
-      if (setter.text == BUILD_CALL) {
+      val setterText = setter.text
+      if (setterText == BUILD_CALL) {
         break
       }
 
@@ -112,7 +113,10 @@ class KtProtoBuilderInspection(@JvmField var avoidThisExpression: Boolean = fals
       }
 
       val rawValue = setter.lastChild.text.drop(1).dropLast(1)
-      builder.append("$fieldName = $rawValue\n")
+      builder.append(fieldName)
+      builder.append(if (setterText.startsWith(ADD_PREFIX)) " += " else " = ")
+      builder.append(rawValue)
+      builder.append("\n")
     }
 
     return builder.toString().trimEnd()
