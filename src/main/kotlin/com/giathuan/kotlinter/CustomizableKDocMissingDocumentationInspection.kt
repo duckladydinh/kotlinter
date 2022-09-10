@@ -34,9 +34,19 @@ class CustomizableKDocMissingDocumentationInspection(
     @JvmField var ignoreOverrideElements: Boolean = true,
     @JvmField var ignoreNonOverridableProperties: Boolean = true
 ) : AbstractKotlinInspection() {
+
+  override fun createOptionsPanel(): JComponent {
+    val panel = MultipleCheckboxOptionsPanel(this)
+    panel.addCheckbox("Ignore tests", "ignoreTests")
+    panel.addCheckbox("Ignore override elements", "ignoreOverrideElements")
+    panel.addCheckbox("Ignore non-overridable properties", "ignoreNonOverridableProperties")
+    return panel
+  }
+
   override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor =
       namedDeclarationVisitor { element ->
-        if (ignoreTests && TestUtils.isInTestSourceContent(element)) {
+        if (TestUtils.isInTestSourceContent(element) &&
+            (ignoreTests || element.containingFile.name.endsWith(KOTLIN_TEST_FILE_SUFFIX))) {
           return@namedDeclarationVisitor
         }
         val nameIdentifier = element.nameIdentifier
@@ -66,14 +76,6 @@ class CustomizableKDocMissingDocumentationInspection(
         }
       }
 
-  override fun createOptionsPanel(): JComponent {
-    val panel = MultipleCheckboxOptionsPanel(this)
-    panel.addCheckbox("Ignore tests", "ignoreTests")
-    panel.addCheckbox("Ignore override elements", "ignoreOverrideElements")
-    panel.addCheckbox("Ignore non-overridable properties", "ignoreNonOverridableProperties")
-    return panel
-  }
-
   class AddDocumentationFix : LocalQuickFix {
     override fun getName(): String = "Kotlinter: Add documentation"
 
@@ -101,5 +103,10 @@ class CustomizableKDocMissingDocumentationInspection(
       editor.caretModel.moveToOffset(asterisk.endOffset)
       EditorModificationUtil.insertStringAtCaret(editor, " ")
     }
+  }
+
+  companion object {
+
+    private const val KOTLIN_TEST_FILE_SUFFIX = "Test.kt"
   }
 }
