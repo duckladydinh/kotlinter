@@ -1,6 +1,6 @@
 package com.giathuan.kotlinter.ktproto
 
-import com.giathuan.kotlinter.ktproto.support.JavaBuilderCreatorType
+import com.giathuan.kotlinter.ktproto.support.JavaProtoBuildExpressionType
 import com.giathuan.kotlinter.ktproto.support.KtProtoCopyExpression
 import com.giathuan.kotlinter.ktproto.support.KtProtoCreatorExpression
 import com.giathuan.kotlinter.ktproto.support.KtProtoCreatorExpression.Companion.buildKtProtoCreatorFun
@@ -49,7 +49,7 @@ class KtProtoCreationInspection(@JvmField var avoidThisExpression: Boolean = fal
     val (parts, buildCreatorType, buildCreatorIndex) = parsedJavaProtoBuildExpressionInfo
     val settersCode = buildSettersCode(parts, buildCreatorIndex, avoidThisExpression)
     when (buildCreatorType) {
-      JavaBuilderCreatorType.FRESH -> {
+      JavaProtoBuildExpressionType.BUILD_FROM_NEW_BUILDER_EMPTY -> {
         val ktCreatorFunc = buildKtProtoCreatorFun(parts, buildCreatorIndex)
         return object : KtProtoCreatorExpression {
               override fun getCreatorFunc(): String = ktCreatorFunc
@@ -57,7 +57,7 @@ class KtProtoCreationInspection(@JvmField var avoidThisExpression: Boolean = fal
             }
             .text()
       }
-      JavaBuilderCreatorType.COPY_FROM_NEW_BUILDER -> {
+      JavaProtoBuildExpressionType.BUILD_FROM_NEW_BUILDER_SOURCE -> {
         val argWithBracket = (parts[buildCreatorIndex] as KtCallExpression).lastChild
         val copySrc =
             if (argWithBracket.isInSingleLine()) unwrapBracket(argWithBracket.text.trim()).trim()
@@ -68,7 +68,7 @@ class KtProtoCreationInspection(@JvmField var avoidThisExpression: Boolean = fal
             }
             .text()
       }
-      JavaBuilderCreatorType.COPY_FROM_TO_BUILDER -> {
+      JavaProtoBuildExpressionType.BUILD_FROM_TO_BUILDER_EMPTY -> {
         val copySrc = parts.slice(0 until buildCreatorIndex).joinToString(".") { it.text }
         return object : KtProtoCopyExpression {
               override fun getCopySource(): String = copySrc
