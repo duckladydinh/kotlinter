@@ -18,6 +18,6 @@
                          groupKey="group.names.probable.bugs"
                          enabledByDefault="true"
                          level="WARNING"
-                         implementationClass="com.giathuan.kotlinter.KtProtoBuilderInspection"/>
+                         implementationClass="com.giathuan.kotlinter.ktproto.KtProtoCreationInspection"/>
     </extensions>
 </idea-plugin>

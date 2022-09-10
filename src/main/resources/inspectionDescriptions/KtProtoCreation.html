@@ -1,0 +1,15 @@
+<html>
+<body>
+This will help you migrate your Java proto builders to Kotlin DSL newly introduced by Google. As of now, we support the
+following forms
+
+<ul>
+    <li><code>Message.newBuilder().build()</code></li>
+    <li><code>Message.newBuilder(anotherMessage).build()</code></li>
+    <li><code>anotherMessage.toBuilder().build()</code></li>
+</ul>
+
+In addition, we will by default use the `this.` expression for setters, and we strongly recommend using it.
+
+</body>
+</html>
