@@ -1,0 +1,33 @@
+<!-- Copyright 2000-2022 JetBrains s.r.o. and other contributors. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file. -->
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+
+<idea-plugin>
+
+    <!-- Unique id for this plugin. Must stay constant for the life of the plugin. -->
+    <id>com.giathuan.kotlinter</id>
+
+    <!-- Text to display as name on Preferences/Settings | Plugin page -->
+    <name>Kotlinter</name>
+
+    <!-- Product and plugin compatibility requirements -->
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.java</depends>
+    <depends optional="true" config-file="withKotlin.xml">org.jetbrains.kotlin</depends>
+
+    <!-- Text to display as description on Preferences/Settings | Plugin page -->
+    <description>
+        <![CDATA[
+      Demonstrates implementing a Local Inspection Tool.<br> Adds entries to
+      <b>Preferences | Editor | Inspections | Java | Probable Bugs</b>.
+    ]]>
+    </description>
+    <change-notes>
+    </change-notes>
+
+    <!-- Text to display as company information on Preferences/Settings | Plugin page -->
+    <vendor url="https://plugins.jetbrains.com">IntelliJ Platform SDK</vendor>
+
+    <extensions defaultExtensionNs="com.intellij">
+    </extensions>
+
+</idea-plugin>
