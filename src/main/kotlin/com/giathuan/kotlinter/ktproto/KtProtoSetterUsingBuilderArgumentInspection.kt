@@ -40,7 +40,7 @@ class KtProtoSetterUsingBuilderArgumentInspection(
       holder.registerProblem(
           lastSetter.originalElement,
           "Kotlinter: You should add a .build()",
-          ProblemHighlightType.WEAK_WARNING,
+          ProblemHighlightType.WARNING,
           AddBuildQuickFix())
     }
   }

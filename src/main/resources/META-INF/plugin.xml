@@ -14,18 +14,31 @@
     <depends>com.intellij.java</depends>
     <depends optional="true" config-file="withKotlin.xml">org.jetbrains.kotlin</depends>
 
-    <!-- Text to display as description on Preferences/Settings | Plugin page -->
     <description>
         <![CDATA[
-      Demonstrates implementing a Local Inspection Tool.<br> Adds entries to
-      <b>Preferences | Editor | Inspections | Java | Probable Bugs</b>.
+      Google has recently introduced
+      <a href="https://developers.googleblog.com/2021/11/announcing-kotlin-support-for-protocol.html">
+      a brand-new Kotlin DSL for Protocol Buffers</a>. But if you are migrating your legacy Java code with old style,
+      you will likely choose to keep the old Java-style protos since it's a pain to migrate them all at once. That's
+      where this plugin will come in handy.
+      <br/>
+      <br/>
+
+      It will automatically detect and suggest fixes which can be applied to multiple non-nesting protos at once.
+      However, it won't help you with the imports yet, meaning that you will still need to make sure that the generated
+      Kotlin dependencies are available. Right now, there is no way to support automatic importing. Of course, we will
+      add more features in the future, so please keep yourself updated.
+
+      <br/>
+      <br/>
+      You can explore and customize features by searching for <b>Kotlinter<b/> in Settings.
     ]]>
     </description>
     <change-notes>
     </change-notes>
 
     <!-- Text to display as company information on Preferences/Settings | Plugin page -->
-    <vendor url="https://plugins.jetbrains.com">IntelliJ Platform SDK</vendor>
+    <vendor url="https://plugins.jetbrains.com">Thuan Gia Lam (a handsome boy who aims to reprogram the world</vendor>
 
     <extensions defaultExtensionNs="com.intellij">
     </extensions>
