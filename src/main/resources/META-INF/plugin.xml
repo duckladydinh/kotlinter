@@ -38,7 +38,7 @@
     </change-notes>
 
     <!-- Text to display as company information on Preferences/Settings | Plugin page -->
-    <vendor url="https://plugins.jetbrains.com">Thuan Gia Lam (a handsome boy who aims to reprogram the world</vendor>
+    <vendor url="https://plugins.jetbrains.com">Thuan, the Handsome</vendor>
 
     <extensions defaultExtensionNs="com.intellij">
     </extensions>
