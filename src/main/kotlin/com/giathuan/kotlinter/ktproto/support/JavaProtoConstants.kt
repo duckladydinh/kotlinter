@@ -2,6 +2,7 @@ package com.giathuan.kotlinter.ktproto.support
 
 object JavaProtoConstants {
   const val MESSAGE_LITE_TYPENAME = "com.google.protobuf.MessageLite"
+  const val MESSAGE_LITE_OR_BUILDER_TYPENAME = "com.google.protobuf.MessageLiteOrBuilder"
 
   const val BUILD_CALL = "build()"
 

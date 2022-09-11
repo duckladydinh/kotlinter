@@ -1,10 +1,11 @@
 package com.giathuan.kotlinter.ktproto
 
-import com.giathuan.kotlinter.ktproto.support.JavaProtoBuildExpressionType
+import com.giathuan.kotlinter.ktproto.support.JavaProtoExpressionResolver.parseJavaProtoBuildExpression
+import com.giathuan.kotlinter.ktproto.support.JavaProtoExpressionType
 import com.giathuan.kotlinter.ktproto.support.KtProtoCopyExpression
 import com.giathuan.kotlinter.ktproto.support.KtProtoCreatorExpression
 import com.giathuan.kotlinter.ktproto.support.KtProtoCreatorExpression.Companion.buildKtProtoCreatorFun
-import com.giathuan.kotlinter.ktproto.support.ParsedJavaProtoBuildExpressionInfo
+import com.giathuan.kotlinter.ktproto.support.ParsedJavaProtoExpression
 import com.giathuan.kotlinter.ktproto.support.SetterResolver.buildSettersCode
 import com.giathuan.kotlinter.ktproto.support.StringTransformer.unwrapBracket
 import com.intellij.codeInspection.ProblemHighlightType
@@ -31,8 +32,7 @@ class KtProtoCreationInspection(@JvmField var avoidThisExpression: Boolean = fal
   ): PsiElementVisitor = dotQualifiedExpressionVisitor { element ->
     val dsl =
         try {
-          buildKtProtoDslFromJavaBuildExpression(
-              ParsedJavaProtoBuildExpressionInfo.parseBuildExpression(element))
+          buildKtProtoDslFromJavaBuildExpression(parseJavaProtoBuildExpression(element))
         } catch (t: Throwable) {
           return@dotQualifiedExpressionVisitor
         }
@@ -44,12 +44,12 @@ class KtProtoCreationInspection(@JvmField var avoidThisExpression: Boolean = fal
   }
 
   private fun buildKtProtoDslFromJavaBuildExpression(
-      parsedJavaProtoBuildExpressionInfo: ParsedJavaProtoBuildExpressionInfo,
+      parsedJavaProtoExpression: ParsedJavaProtoExpression,
   ): String {
-    val (parts, buildCreatorType, buildCreatorIndex) = parsedJavaProtoBuildExpressionInfo
+    val (parts, buildCreatorType, buildCreatorIndex) = parsedJavaProtoExpression
     val settersCode = buildSettersCode(parts, buildCreatorIndex, avoidThisExpression)
     when (buildCreatorType) {
-      JavaProtoBuildExpressionType.BUILD_FROM_NEW_BUILDER_EMPTY -> {
+      JavaProtoExpressionType.BUILD_FROM_NEW_BUILDER_EMPTY -> {
         val ktCreatorFunc = buildKtProtoCreatorFun(parts, buildCreatorIndex)
         return object : KtProtoCreatorExpression {
               override fun getCreatorFunc(): String = ktCreatorFunc
@@ -57,7 +57,7 @@ class KtProtoCreationInspection(@JvmField var avoidThisExpression: Boolean = fal
             }
             .text()
       }
-      JavaProtoBuildExpressionType.BUILD_FROM_NEW_BUILDER_SOURCE -> {
+      JavaProtoExpressionType.BUILD_FROM_NEW_BUILDER_SOURCE -> {
         val argWithBracket = (parts[buildCreatorIndex] as KtCallExpression).lastChild
         val copySrc =
             if (argWithBracket.isInSingleLine()) unwrapBracket(argWithBracket.text.trim()).trim()
@@ -68,7 +68,7 @@ class KtProtoCreationInspection(@JvmField var avoidThisExpression: Boolean = fal
             }
             .text()
       }
-      JavaProtoBuildExpressionType.BUILD_FROM_TO_BUILDER_EMPTY -> {
+      JavaProtoExpressionType.BUILD_FROM_TO_BUILDER_EMPTY -> {
         val copySrc = parts.slice(0 until buildCreatorIndex).joinToString(".") { it.text }
         return object : KtProtoCopyExpression {
               override fun getCopySource(): String = copySrc

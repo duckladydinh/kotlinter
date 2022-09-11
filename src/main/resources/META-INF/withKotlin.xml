@@ -19,5 +19,13 @@
                          enabledByDefault="true"
                          level="WARNING"
                          implementationClass="com.giathuan.kotlinter.ktproto.KtProtoCreationInspection"/>
+        <localInspection language="kotlin"
+                         displayName="Kotlinter: KtProtoSetterUsingBuilderArgumentInspection"
+                         groupPath="Kotlin"
+                         groupBundle="messages.InspectionsBundle"
+                         groupKey="group.names.probable.bugs"
+                         enabledByDefault="true"
+                         level="WARNING"
+                         implementationClass="com.giathuan.kotlinter.ktproto.KtProtoSetterUsingBuilderArgumentInspection"/>
     </extensions>
 </idea-plugin>

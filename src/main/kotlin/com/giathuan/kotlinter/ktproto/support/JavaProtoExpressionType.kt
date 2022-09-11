@@ -3,7 +3,7 @@ package com.giathuan.kotlinter.ktproto.support
 import org.jetbrains.kotlin.idea.debugger.sequence.psi.callName
 import org.jetbrains.kotlin.psi.KtCallExpression
 
-enum class JavaProtoBuildExpressionType {
+enum class JavaProtoExpressionType {
   /** Example: newBuilder().build() */
   BUILD_FROM_NEW_BUILDER_EMPTY,
 
@@ -14,7 +14,7 @@ enum class JavaProtoBuildExpressionType {
   BUILD_FROM_TO_BUILDER_EMPTY;
 
   companion object {
-    fun toJavaBuilderExpressionType(part: KtCallExpression): JavaProtoBuildExpressionType? {
+    fun toJavaBuilderExpressionType(part: KtCallExpression): JavaProtoExpressionType? {
       val callName = part.callName()
       val numArgs = part.valueArguments.size
       if ((callName == JavaProtoConstants.TO_BUILDER_CALL_NAME) && (numArgs == 0)) {

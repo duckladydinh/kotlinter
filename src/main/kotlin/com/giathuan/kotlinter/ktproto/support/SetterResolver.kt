@@ -1,7 +1,9 @@
 package com.giathuan.kotlinter.ktproto.support
 
+import com.giathuan.kotlinter.ktproto.support.JavaProtoExpressionResolver.isJavaProtoMissingBuildExpression
 import org.jetbrains.kotlin.idea.debugger.sequence.psi.callName
 import org.jetbrains.kotlin.psi.KtCallExpression
+import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtExpression
 
 object SetterResolver {
@@ -29,8 +31,15 @@ object SetterResolver {
       }
 
       val fieldName = getFieldFromValidSetterOrThrows(funcCall)
-      val simplifiedValue = funcCall.valueArguments[0].text
-      if (!avoidThisExpression || fieldName == simplifiedValue) {
+
+      val callArg = funcCall.valueArguments[0]
+      val callArgInnerExpression = callArg.lastChild
+      val isArgProtoBuilder =
+          callArgInnerExpression is KtDotQualifiedExpression &&
+              isJavaProtoMissingBuildExpression(callArgInnerExpression)
+
+      val simplifiedValue = callArg.text
+      if (!avoidThisExpression || (fieldName == simplifiedValue && !isArgProtoBuilder)) {
         builder.append("this.")
       }
 
@@ -42,13 +51,16 @@ object SetterResolver {
       }
       builder.append("= ")
       builder.append(rawValue)
+      if (isArgProtoBuilder) {
+        builder.append("\n.build()")
+      }
       builder.append("\n")
     }
 
     return builder.toString().trimEnd()
   }
 
-  private fun getFieldFromValidSetterOrThrows(setter: KtCallExpression): String {
+  fun getFieldFromValidSetterOrThrows(setter: KtCallExpression): String {
     if (setter.valueArguments.size != 1) {
       throw IllegalArgumentException("Expect exactly 1 argument: ${setter.text}")
     }
