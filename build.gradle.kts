@@ -1,22 +1,43 @@
+/**
+ * To build the plugin for a particular .properties file, run the following command
+ *
+ * ```
+ * ./gradlew signPlugin -Dconfig=IntelliJ213.properties
+ *
+ * ```
+ *
+ * For development (with debugging enabled), we suggest setting the default config file and using
+ * the IntelliJ Run Configuration to call `runIde`.
+ */
+import java.util.*
+
+val configFile: String = System.getProperty("config", "IntelliJ213.properties")
+val config = Properties().apply { load(file("${rootProject.rootDir}/$configFile").inputStream()) }
+
+val intellijJvmVersion: String = config.getProperty("intellij.jvm.version")
+val intellijIdeVersion: String = config.getProperty("intellij.ide.version")
+val intellijMinBuildVersion: String = config.getProperty("intellij.build.min.version")
+val intellijMaxBuildVersion: String = config.getProperty("intellij.build.max.version")
+
 plugins {
   id("java")
-  kotlin("jvm") version "1.6.10"
+  kotlin("jvm") version "1.7.10"
   id("org.jetbrains.intellij") version "1.9.0"
 }
 
 group = "com.giathuan"
 
-version = "1.0.213"
+version = "1.0.$intellijIdeVersion"
 
 repositories { mavenCentral() }
 
 dependencies { testImplementation(kotlin("test")) }
 
-java { sourceCompatibility = JavaVersion.VERSION_11 }
+java { sourceCompatibility = JavaVersion.toVersion(intellijJvmVersion.toInt()) }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
-  version.set("2021.3.3")
+  version.set(intellijIdeVersion)
   plugins.set(
       listOf(
           "com.intellij.java",
@@ -32,13 +53,13 @@ tasks {
 
   patchPluginXml {
     version.set("${project.version}")
-    sinceBuild.set("213")
-    untilBuild.set("213.*")
+    sinceBuild.set(intellijMinBuildVersion)
+    untilBuild.set(intellijMaxBuildVersion)
   }
 
   publishPlugin { token.set(System.getenv("ORG_GRADLE_PROJECT_intellijPublishToken")) }
 
-  compileKotlin { kotlinOptions.jvmTarget = "11" }
+  compileKotlin { kotlinOptions.jvmTarget = intellijJvmVersion }
 
-  compileTestKotlin { kotlinOptions.jvmTarget = "11" }
+  compileTestKotlin { kotlinOptions.jvmTarget = intellijJvmVersion }
 }
