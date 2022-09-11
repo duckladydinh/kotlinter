@@ -25,7 +25,7 @@
                          groupBundle="messages.InspectionsBundle"
                          groupKey="group.names.probable.bugs"
                          enabledByDefault="true"
-                         level="WARNING"
+                         level="WEAK_WARNING"
                          implementationClass="com.giathuan.kotlinter.ktproto.KtProtoSetterUsingBuilderArgumentInspection"/>
     </extensions>
 </idea-plugin>
