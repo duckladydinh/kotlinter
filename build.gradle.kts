@@ -20,7 +20,7 @@ intellij {
   plugins.set(
       listOf(
           "com.intellij.java",
-          "org.jetbrains.kotlin",
+          // "org.jetbrains.kotlin",
           // "com.google.idea.bazel.ijwb:2022.06.28.0.0-api-version-213",
           ))
 }
