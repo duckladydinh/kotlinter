@@ -35,7 +35,7 @@
     </change-notes>
 
     <!-- Text to display as company information on Preferences/Settings | Plugin page -->
-    <vendor url="https://ducklaydinh.github.io">Thuan, the Handsome</vendor>
+    <vendor url="https://duckladydinh.github.io">Thuan, the Handsome</vendor>
 
     <extensions defaultExtensionNs="com.intellij">
     </extensions>
