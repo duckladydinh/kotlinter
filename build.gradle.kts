@@ -2,7 +2,7 @@
  * To build the plugin for a particular .properties file, run the following command
  *
  * ```
- * ./gradlew signPlugin -Dconfig=IntelliJ213.properties
+ * ./gradlew signPlugin -Dconfig=IntelliJ213.properties -DminorVersion=$(git rev-parse --short HEAD)
  *
  * ```
  *
@@ -12,8 +12,10 @@
 import java.util.*
 
 val configFile: String = System.getProperty("config", "IntelliJ213.properties")
+val minorVersion: String = System.getProperty("minorVersion", "unversioned")
 val config = Properties().apply { load(file("${rootProject.rootDir}/$configFile").inputStream()) }
 
+val kotlinterMinorVersion = 2
 val intellijJvmVersion: String = config.getProperty("intellij.jvm.version")
 val intellijIdeVersion: String = config.getProperty("intellij.ide.version")
 val intellijMinBuildVersion: String = config.getProperty("intellij.build.min.version")
@@ -27,7 +29,7 @@ plugins {
 
 group = "com.giathuan"
 
-version = "1.0.$intellijIdeVersion"
+version = "1.$intellijIdeVersion.$minorVersion"
 
 repositories { mavenCentral() }
 
