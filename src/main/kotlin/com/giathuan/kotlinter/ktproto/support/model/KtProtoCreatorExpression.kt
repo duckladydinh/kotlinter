@@ -16,12 +16,16 @@ interface KtProtoCreatorExpression {
   fun getSettersCode(): String
 
   /** Returns the unformatted DSL. */
-  fun text(): String =
-      """${getCreatorFunc()} {
+  fun text(): String {
+    if (getSettersCode().isBlank()) {
+      return "${getCreatorFunc()} {}"
+    }
+    return """${getCreatorFunc()} {
 		  ${getSettersCode()}
 		  }
 		  """
-          .trimIndent()
+        .trimIndent()
+  }
 
   companion object {
     /** Returns com.package.MyProtosKt.myMessage for com.package.MyProto.MyMessage. */
