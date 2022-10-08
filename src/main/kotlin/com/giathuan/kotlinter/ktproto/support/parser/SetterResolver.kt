@@ -1,19 +1,25 @@
-package com.giathuan.kotlinter.ktproto.support
+package com.giathuan.kotlinter.ktproto.support.parser
 
-import com.giathuan.kotlinter.ktproto.support.JavaProtoExpressionResolver.isJavaProtoMissingBuildExpression
+import com.giathuan.kotlinter.ktproto.support.model.JavaProtoConstants
+import com.giathuan.kotlinter.ktproto.support.model.PrecedingCommentsBlock
+import com.giathuan.kotlinter.ktproto.support.parser.JavaProtoExpressionResolver.isJavaProtoMissingBuildExpression
+import com.giathuan.kotlinter.ktproto.support.utility.StringTransformer
+import com.giathuan.kotlinter.ktproto.support.utility.StringTransformer.unwrapRoundBracket
 import org.jetbrains.kotlin.idea.debugger.sequence.psi.callName
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtExpression
 
+/** Utilities to handle proto setters. */
 object SetterResolver {
+  /** Returns unformatted DSL for proto setters only. */
   fun buildSettersCode(
       parts: List<KtExpression>,
-      buildCreatorIndex: Int,
+      firstSetterIndex: Int,
       avoidThisExpression: Boolean
   ): String {
     val builder = StringBuilder()
-    for (i in buildCreatorIndex + 1 until parts.size) {
+    for (i in firstSetterIndex until parts.size) {
       val funcCall = parts[i] as KtCallExpression
       // Since func is inside a dot-qualified call chain, its previous sibling is a dot.
       val precedingCommentsBlock = PrecedingCommentsBlock.query(funcCall.prevSibling)
@@ -43,7 +49,7 @@ object SetterResolver {
         builder.append("this.")
       }
 
-      val rawValue = StringTransformer.unwrapBracket(funcCall.lastChild.text.trim()).trim()
+      val rawValue = unwrapRoundBracket(funcCall.lastChild.text)
       builder.append(fieldName)
       builder.append(" ")
       if (funcCall.callName().startsWith(JavaProtoConstants.ADD_PREFIX)) {
@@ -60,6 +66,7 @@ object SetterResolver {
     return builder.toString().trimEnd()
   }
 
+  /** Returns something for .setSomething(x) or throws otherwise. */
   fun getFieldFromValidSetterOrThrows(setter: KtCallExpression): String {
     if (setter.valueArguments.size != 1) {
       throw IllegalArgumentException("Expect exactly 1 argument: ${setter.text}")

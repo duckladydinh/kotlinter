@@ -1,8 +1,14 @@
-package com.giathuan.kotlinter.ktproto.support
+package com.giathuan.kotlinter.ktproto.support.parser
 
-import com.giathuan.kotlinter.ktproto.support.KtTypeVerifier.isBuilderOf
-import com.giathuan.kotlinter.ktproto.support.KtTypeVerifier.isSubclassOf
-import com.giathuan.kotlinter.ktproto.support.SetterResolver.getFieldFromValidSetterOrThrows
+import com.giathuan.kotlinter.ktproto.support.model.JavaProtoConstants
+import com.giathuan.kotlinter.ktproto.support.model.JavaProtoExpressionParsedData
+import com.giathuan.kotlinter.ktproto.support.model.JavaProtoExpressionType
+import com.giathuan.kotlinter.ktproto.support.model.KtProtoCreatorExpression
+import com.giathuan.kotlinter.ktproto.support.model.KtProtoCreatorExpression.Companion.buildKtProtoCreatorFunc
+import com.giathuan.kotlinter.ktproto.support.parser.DotQualifiedExpressionSplitter.splitDotQualifiedExpression
+import com.giathuan.kotlinter.ktproto.support.parser.SetterResolver.getFieldFromValidSetterOrThrows
+import com.giathuan.kotlinter.ktproto.support.utility.KtTypeVerifier.isBuilderOf
+import com.giathuan.kotlinter.ktproto.support.utility.KtTypeVerifier.isSubclassOf
 import org.jetbrains.kotlin.idea.core.resolveType
 import org.jetbrains.kotlin.idea.intentions.callExpression
 import org.jetbrains.kotlin.psi.KtCallExpression
@@ -11,8 +17,41 @@ import org.jetbrains.kotlin.psi.KtValueArgument
 import org.jetbrains.kotlin.psi.KtValueArgumentList
 import org.jetbrains.kotlinx.serialization.compiler.backend.common.serialName
 
+/** Utilities to resolve different Java proto expressions. */
 object JavaProtoExpressionResolver {
-  fun parseJavaProtoBuildExpression(element: KtDotQualifiedExpression): ParsedJavaProtoExpression {
+  /** Returns myMessage {} for MyMessage.getDefaultInstance(). */
+  fun parseJavaGetDefaultInstanceExpression(
+      element: KtDotQualifiedExpression
+  ): KtProtoCreatorExpression {
+    val text = element.text
+    val getDefaultInstantExpressionCallText =
+        element.callExpression?.text
+            ?: throw invalid("The last part is not a call expression: $text")
+
+    if (getDefaultInstantExpressionCallText != JavaProtoConstants.GET_DEFAULT_INSTANCE_CALL) {
+      throw invalid("It misses .getDefaultInstance() call: $text")
+    }
+
+    val messageType = element.resolveType()
+    if (!messageType.isSubclassOf(JavaProtoConstants.MESSAGE_LITE_TYPENAME)) {
+      throw invalid("The type is not MessageLite: $text")
+    }
+
+    val parts = splitDotQualifiedExpression(element)
+    val ktCreatorFunc = buildKtProtoCreatorFunc(parts, simpleTypeNameIndex = parts.lastIndex - 1)
+    return object : KtProtoCreatorExpression {
+      override fun getCreatorFunc(): String = ktCreatorFunc
+      override fun getSettersCode(): String = ""
+    }
+  }
+
+  /**
+   * Returns [JavaProtoExpressionParsedData] for a valid Java proto builder expression like
+   * MyMessage.newBuilder().setSomething(x).build().
+   */
+  fun parseJavaProtoBuildExpression(
+      element: KtDotQualifiedExpression
+  ): JavaProtoExpressionParsedData {
     val text = element.text
     val buildCallText =
         element.callExpression?.text
@@ -33,7 +72,7 @@ object JavaProtoExpressionResolver {
       throw invalid("It misses builder calls: $element")
     }
 
-    val parts = DotQualifiedExpressionSplitter.splitDotQualifiedExpression(element)
+    val parts = splitDotQualifiedExpression(element)
     for (i in parts.size - 2 downTo 1) {
       val part = parts[i]
       if (part !is KtCallExpression) {
@@ -46,12 +85,14 @@ object JavaProtoExpressionResolver {
             "Expected to be builder of $messageTypeSerialName but was ${partType?.serialName()}")
       }
 
+      // Stops if encounters .newBuilder() or .newBuilder(anotherMessage).
       val builderCreatorType = JavaProtoExpressionType.toJavaBuilderExpressionType(part) ?: continue
-      return ParsedJavaProtoExpression(parts, builderCreatorType, builderCreatorIndex = i)
+      return JavaProtoExpressionParsedData(parts, builderCreatorType, builderCreatorIndex = i)
     }
     throw invalid("Couldn't find builder creator call in correct location: $element")
   }
 
+  /** Returns true for x if it's inside a setter MyMessage.newBuilder().setSomething(x). */
   fun isArgumentOfSomeProtoSetter(element: KtDotQualifiedExpression): Boolean {
     try {
       val parent = element.parent as KtValueArgument
@@ -67,6 +108,10 @@ object JavaProtoExpressionResolver {
     return true
   }
 
+  /**
+   * Returns true if it's an expression like MyMessage.newBuilder().setSomething(x) where .build()
+   * is missing.
+   */
   fun isJavaProtoMissingBuildExpression(element: KtDotQualifiedExpression): Boolean {
     try {
       val messageType = element.resolveType()

@@ -1,9 +1,11 @@
-package com.giathuan.kotlinter.ktproto.support
+package com.giathuan.kotlinter.ktproto.support.parser
 
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtExpression
 
+/** A utilities to split [KtDotQualifiedExpression]. */
 object DotQualifiedExpressionSplitter {
+  /** Split dot qualified expressions like a.b.c.d().e into [a, b, c, d(), e]. */
   fun splitDotQualifiedExpression(element: KtDotQualifiedExpression): List<KtExpression> {
     var node = element
     if (element.selectorExpression == null) {

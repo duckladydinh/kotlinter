@@ -1,7 +1,7 @@
 package com.giathuan.kotlinter.ktproto
 
-import com.giathuan.kotlinter.ktproto.support.JavaProtoExpressionResolver.isArgumentOfSomeProtoSetter
-import com.giathuan.kotlinter.ktproto.support.JavaProtoExpressionResolver.isJavaProtoMissingBuildExpression
+import com.giathuan.kotlinter.ktproto.support.parser.JavaProtoExpressionResolver.isArgumentOfSomeProtoSetter
+import com.giathuan.kotlinter.ktproto.support.parser.JavaProtoExpressionResolver.isJavaProtoMissingBuildExpression
 import com.intellij.codeInspection.LocalQuickFix
 import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.ProblemHighlightType
@@ -18,6 +18,10 @@ import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.psi.dotQualifiedExpressionVisitor
 import javax.swing.JComponent
 
+/**
+ * An IntelliJ inspection to detect Java proto builder without .build() call and suggest
+ * transformation to add .build() if it's a proto setter argument.
+ */
 class KtProtoSetterUsingBuilderArgumentInspection(
     @JvmField var fixNonProtoSetterExpressions: Boolean = false
 ) : AbstractKotlinInspection() {
@@ -45,7 +49,7 @@ class KtProtoSetterUsingBuilderArgumentInspection(
     }
   }
 
-  class AddBuildQuickFix : LocalQuickFix {
+  private class AddBuildQuickFix : LocalQuickFix {
     override fun getName(): String = "Kotlinter: Add a .build()"
 
     override fun getFamilyName(): String = name

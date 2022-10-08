@@ -1,4 +1,4 @@
-package com.giathuan.kotlinter.ktproto.support
+package com.giathuan.kotlinter.ktproto.support.model
 
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
@@ -6,8 +6,10 @@ import org.jetbrains.kotlin.idea.refactoring.getLineNumber
 import org.jetbrains.kotlin.j2k.isInSingleLine
 import org.jetbrains.kotlin.psi.psiUtil.getPrevSiblingIgnoringWhitespace
 
+/** A model for preceding comments of some element. */
 data class PrecedingCommentsBlock(val block: String, val firstCommentNotStartingNewLine: Boolean) {
   companion object {
+    /** Returns [PrecedingCommentsBlock] for a [PsiElement] */
     fun query(element: PsiElement): PrecedingCommentsBlock {
       val reversedComments = mutableListOf<PsiComment>()
       var node = element.originalElement

@@ -9,6 +9,14 @@
                          level="WARNING"
                          implementationClass="com.giathuan.kotlinter.CustomizableKDocMissingDocumentationInspection"/>
         <localInspection language="kotlin"
+                         displayName="Kotlinter: KtProtoGetDefaultInstanceInspection"
+                         groupPath="Kotlin"
+                         groupBundle="messages.InspectionsBundle"
+                         groupKey="group.names.probable.bugs"
+                         enabledByDefault="true"
+                         level="WARNING"
+                         implementationClass="com.giathuan.kotlinter.ktproto.KtProtoGetDefaultInstanceInspection"/>
+        <localInspection language="kotlin"
                          displayName="Kotlinter: KotlinProtoBuilderInspection"
                          groupPath="Kotlin"
                          groupBundle="messages.InspectionsBundle"

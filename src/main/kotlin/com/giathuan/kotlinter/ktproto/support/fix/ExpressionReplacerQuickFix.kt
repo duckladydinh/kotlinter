@@ -1,4 +1,4 @@
-package com.giathuan.kotlinter.ktproto
+package com.giathuan.kotlinter.ktproto.support.fix
 
 import com.intellij.codeInspection.LocalQuickFix
 import com.intellij.codeInspection.ProblemDescriptor
@@ -7,8 +7,13 @@ import org.jetbrains.kotlin.idea.util.CommentSaver
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtPsiFactory
 
-class ExpressionReplacerQuickFix(private val text: String) : LocalQuickFix {
-  override fun getName(): String = "Kotlinter: Transform to Kotlin DSL"
+/**
+ * A generic fix that input the replacement expression as a string, converts it to KtExpression and
+ * applies.
+ */
+class ExpressionReplacerQuickFix(private val text: String, private val name: String) :
+    LocalQuickFix {
+  override fun getName(): String = name
 
   override fun getFamilyName(): String = name
 

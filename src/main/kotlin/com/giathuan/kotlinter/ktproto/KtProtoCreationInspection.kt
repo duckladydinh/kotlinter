@@ -1,13 +1,14 @@
 package com.giathuan.kotlinter.ktproto
 
-import com.giathuan.kotlinter.ktproto.support.JavaProtoExpressionResolver.parseJavaProtoBuildExpression
-import com.giathuan.kotlinter.ktproto.support.JavaProtoExpressionType
-import com.giathuan.kotlinter.ktproto.support.KtProtoCopyExpression
-import com.giathuan.kotlinter.ktproto.support.KtProtoCreatorExpression
-import com.giathuan.kotlinter.ktproto.support.KtProtoCreatorExpression.Companion.buildKtProtoCreatorFun
-import com.giathuan.kotlinter.ktproto.support.ParsedJavaProtoExpression
-import com.giathuan.kotlinter.ktproto.support.SetterResolver.buildSettersCode
-import com.giathuan.kotlinter.ktproto.support.StringTransformer.unwrapBracket
+import com.giathuan.kotlinter.ktproto.support.fix.ExpressionReplacerQuickFix
+import com.giathuan.kotlinter.ktproto.support.model.JavaProtoExpressionParsedData
+import com.giathuan.kotlinter.ktproto.support.model.JavaProtoExpressionType
+import com.giathuan.kotlinter.ktproto.support.model.KtProtoCopyExpression
+import com.giathuan.kotlinter.ktproto.support.model.KtProtoCreatorExpression
+import com.giathuan.kotlinter.ktproto.support.model.KtProtoCreatorExpression.Companion.buildKtProtoCreatorFunc
+import com.giathuan.kotlinter.ktproto.support.parser.JavaProtoExpressionResolver.parseJavaProtoBuildExpression
+import com.giathuan.kotlinter.ktproto.support.parser.SetterResolver.buildSettersCode
+import com.giathuan.kotlinter.ktproto.support.utility.StringTransformer.unwrapRoundBracket
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.codeInspection.ui.MultipleCheckboxOptionsPanel
@@ -18,6 +19,11 @@ import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.dotQualifiedExpressionVisitor
 import javax.swing.JComponent
 
+/**
+ * An IntelliJ inspection to detect Java proto builder expression like
+ * `MyMessage.newBuilder().setSomething(x).build()` and suggest transformation to Kotlin DSL like
+ * `myMessage { this.something = x }`.
+ */
 class KtProtoCreationInspection(@JvmField var avoidThisExpression: Boolean = false) :
     AbstractKotlinInspection() {
 
@@ -40,17 +46,19 @@ class KtProtoCreationInspection(@JvmField var avoidThisExpression: Boolean = fal
         element.originalElement,
         "Kotlinter: Better DSL for proto builder is available in Kotlin",
         ProblemHighlightType.WARNING,
-        ExpressionReplacerQuickFix(dsl))
+        ExpressionReplacerQuickFix(dsl, name = "Kotlinter: Transform to Kotlin DSL"))
   }
 
   private fun buildKtProtoDslFromJavaBuildExpression(
-      parsedJavaProtoExpression: ParsedJavaProtoExpression,
+      javaProtoExpressionParsedData: JavaProtoExpressionParsedData,
   ): String {
-    val (parts, buildCreatorType, buildCreatorIndex) = parsedJavaProtoExpression
-    val settersCode = buildSettersCode(parts, buildCreatorIndex, avoidThisExpression)
+    val (parts, buildCreatorType, buildCreatorIndex) = javaProtoExpressionParsedData
+    val settersCode =
+        buildSettersCode(parts, firstSetterIndex = buildCreatorIndex + 1, avoidThisExpression)
     when (buildCreatorType) {
       JavaProtoExpressionType.BUILD_FROM_NEW_BUILDER_EMPTY -> {
-        val ktCreatorFunc = buildKtProtoCreatorFun(parts, buildCreatorIndex)
+        val ktCreatorFunc =
+            buildKtProtoCreatorFunc(parts, simpleTypeNameIndex = buildCreatorIndex - 1)
         return object : KtProtoCreatorExpression {
               override fun getCreatorFunc(): String = ktCreatorFunc
               override fun getSettersCode(): String = settersCode
@@ -60,7 +68,7 @@ class KtProtoCreationInspection(@JvmField var avoidThisExpression: Boolean = fal
       JavaProtoExpressionType.BUILD_FROM_NEW_BUILDER_SOURCE -> {
         val argWithBracket = (parts[buildCreatorIndex] as KtCallExpression).lastChild
         val copySrc =
-            if (argWithBracket.isInSingleLine()) unwrapBracket(argWithBracket.text.trim()).trim()
+            if (argWithBracket.isInSingleLine()) unwrapRoundBracket(argWithBracket.text)
             else argWithBracket.text.trim()
         return object : KtProtoCopyExpression {
               override fun getCopySource(): String = copySrc

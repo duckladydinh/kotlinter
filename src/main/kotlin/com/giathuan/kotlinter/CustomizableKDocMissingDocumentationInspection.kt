@@ -76,32 +76,34 @@ class CustomizableKDocMissingDocumentationInspection(
         }
       }
 
-  class AddDocumentationFix : LocalQuickFix {
+  private class AddDocumentationFix : LocalQuickFix {
     override fun getName(): String = "Kotlinter: Add documentation"
 
     override fun getFamilyName(): String = name
 
     override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
-      val declaration =
-          descriptor.psiElement.getParentOfType<KtNamedDeclaration>(true)
-              ?: throw IllegalStateException("Can't find declaration")
+      try {
+        val declaration =
+            descriptor.psiElement.getParentOfType<KtNamedDeclaration>(true)
+                ?: throw IllegalStateException("Can't find declaration")
 
-      declaration.addBefore(
-          KDocElementFactory(project).createKDocFromText("/**\n*\n*/\n"), declaration.firstChild)
+        declaration.addBefore(
+            KDocElementFactory(project).createKDocFromText("/**\n*\n*/\n"), declaration.firstChild)
 
-      val editor = descriptor.psiElement.findExistingEditor() ?: return
+        val editor = descriptor.psiElement.findExistingEditor() ?: return
 
-      // If we just add whitespace
-      // /**
-      //  *[HERE]
-      // it will be erased by formatter, so following code adds it right way and moves caret then
-      editor.unblockDocument()
+        // If we just add whitespace
+        // /**
+        //  *[HERE]
+        // it will be erased by formatter, so following code adds it right way and moves caret then
+        editor.unblockDocument()
 
-      val section = declaration.firstChild.getChildOfType<KDocSection>() ?: return
-      val asterisk = section.firstChild
+        val section = declaration.firstChild.getChildOfType<KDocSection>() ?: return
+        val asterisk = section.firstChild
 
-      editor.caretModel.moveToOffset(asterisk.endOffset)
-      EditorModificationUtil.insertStringAtCaret(editor, " ")
+        editor.caretModel.moveToOffset(asterisk.endOffset)
+        EditorModificationUtil.insertStringAtCaret(editor, " ")
+      } catch (_: Throwable) {}
     }
   }
 
