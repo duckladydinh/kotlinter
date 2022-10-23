@@ -3,11 +3,12 @@ package com.giathuan.kotlinter.ktproto.support.parser
 import com.giathuan.kotlinter.ktproto.support.model.JavaProtoConstants
 import com.giathuan.kotlinter.ktproto.support.model.PrecedingCommentsBlock
 import com.giathuan.kotlinter.ktproto.support.parser.JavaProtoExpressionResolver.isJavaProtoMissingBuildExpression
+import com.giathuan.kotlinter.ktproto.support.utility.KtTypeVerifier.isSubclassOf
 import com.giathuan.kotlinter.ktproto.support.utility.StringTransformer
 import com.giathuan.kotlinter.ktproto.support.utility.StringTransformer.unwrapRoundBracket
+import org.jetbrains.kotlin.idea.core.resolveType
 import org.jetbrains.kotlin.idea.debugger.sequence.psi.callName
 import org.jetbrains.kotlin.psi.KtCallExpression
-import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtExpression
 
 /** Utilities to handle proto setters. */
@@ -20,9 +21,9 @@ object SetterResolver {
   ): String {
     val builder = StringBuilder()
     for (i in firstSetterIndex until parts.size) {
-      val funcCall = parts[i] as KtCallExpression
+      val javaSetter = parts[i] as KtCallExpression
       // Since func is inside a dot-qualified call chain, its previous sibling is a dot.
-      val precedingCommentsBlock = PrecedingCommentsBlock.query(funcCall.prevSibling)
+      val precedingCommentsBlock = PrecedingCommentsBlock.query(javaSetter.prevSibling)
       if (precedingCommentsBlock.block.isNotBlank()) {
         if (precedingCommentsBlock.firstCommentNotStartingNewLine && builder.endsWith("\n")) {
           builder.deleteCharAt(builder.lastIndex)
@@ -36,42 +37,61 @@ object SetterResolver {
         continue
       }
 
-      val fieldName = getFieldFromValidSetterOrThrows(funcCall)
-
-      val callArg = funcCall.valueArguments[0]
-      val callArgInnerExpression = callArg.lastChild
-      val isArgProtoBuilder =
-          callArgInnerExpression is KtDotQualifiedExpression &&
-              isJavaProtoMissingBuildExpression(callArgInnerExpression)
-
-      val simplifiedValue = callArg.text
-      if (!avoidThisExpression || (fieldName == simplifiedValue && !isArgProtoBuilder)) {
-        builder.append("this.")
-      }
-
-      val rawValue = unwrapRoundBracket(funcCall.lastChild.text)
-      builder.append(fieldName)
-      builder.append(" ")
-      if (funcCall.callName().startsWith(JavaProtoConstants.ADD_PREFIX)) {
-        builder.append("+")
-      }
-      builder.append("= ")
-      builder.append(rawValue)
-      if (isArgProtoBuilder) {
-        builder.append("\n.build()")
-      }
+      builder.append(generateSingleSetter(javaSetter, avoidThisExpression))
       builder.append("\n")
     }
 
     return builder.toString().trimEnd()
   }
 
-  /** Returns something for .setSomething(x) or throws otherwise. */
-  fun getFieldFromValidSetterOrThrows(setter: KtCallExpression): String {
-    if (setter.valueArguments.size != 1) {
-      throw IllegalArgumentException("Expect exactly 1 argument: ${setter.text}")
+  /** Generates Kotlin DSL for a single Java setter. */
+  fun generateSingleSetter(javaSetter: KtCallExpression, avoidThisExpression: Boolean): String {
+    // Special case for .setExtension(e, x).
+    val callName = javaSetter.callName()
+    if (callName == "setExtension" &&
+        javaSetter.valueArguments.size == 2 &&
+        (javaSetter.valueArguments[0].lastChild as KtExpression)
+            .resolveType()
+            .isSubclassOf(JavaProtoConstants.GENERATED_EXTENSION_TYPENAME)) {
+      return "this[${javaSetter.valueArguments[0].text.trim()}] = ${javaSetter.valueArguments[1].text.trim()}"
     }
-    val callName = setter.callName()
+
+    // Throw if it's not a normal setter.
+    if (javaSetter.valueArguments.size != 1) {
+      throw IllegalArgumentException("Expect exactly 1 argument: ${javaSetter.text}")
+    }
+
+    // Prepare an empty string builder for storing the result.
+    val builder = StringBuilder()
+
+    // Add `this.` if needed.
+    val fieldName = extractFieldNameFromCallName(callName)
+    val isArgProtoBuilderMissingBuild =
+        isJavaProtoMissingBuildExpression(javaSetter.valueArguments[0].lastChild)
+    if (!avoidThisExpression ||
+        (fieldName == javaSetter.valueArguments[0].text && !isArgProtoBuilderMissingBuild)) {
+      builder.append("this.")
+    }
+
+    // Transform into basic setter.
+    val rawValue = unwrapRoundBracket(javaSetter.lastChild.text)
+    builder.append(fieldName)
+    builder.append(" ")
+    if (callName.startsWith(JavaProtoConstants.ADD_PREFIX)) {
+      builder.append("+")
+    }
+    builder.append("= ")
+    builder.append(rawValue)
+
+    // Add `.build` if needed.
+    if (isArgProtoBuilderMissingBuild) {
+      builder.append("\n.build()")
+    }
+
+    return builder.toString()
+  }
+
+  private fun extractFieldNameFromCallName(callName: String): String {
     if (callName.startsWith(JavaProtoConstants.ADD_ALL_PREFIX) &&
         callName.length > 6 &&
         callName[6].isUpperCase()) {

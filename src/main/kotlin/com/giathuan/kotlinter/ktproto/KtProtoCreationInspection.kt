@@ -38,7 +38,8 @@ class KtProtoCreationInspection(@JvmField var avoidThisExpression: Boolean = fal
   ): PsiElementVisitor = dotQualifiedExpressionVisitor { element ->
     val dsl =
         try {
-          buildKtProtoDslFromJavaBuildExpression(parseJavaProtoBuildExpression(element))
+          val javaProtoExpressionParsedData = parseJavaProtoBuildExpression(element)
+          buildKtProtoDslFromJavaBuildExpression(javaProtoExpressionParsedData)
         } catch (t: Throwable) {
           return@dotQualifiedExpressionVisitor
         }

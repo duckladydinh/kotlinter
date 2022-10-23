@@ -6,9 +6,10 @@ import com.giathuan.kotlinter.ktproto.support.model.JavaProtoExpressionType
 import com.giathuan.kotlinter.ktproto.support.model.KtProtoCreatorExpression
 import com.giathuan.kotlinter.ktproto.support.model.KtProtoCreatorExpression.Companion.buildKtProtoCreatorFunc
 import com.giathuan.kotlinter.ktproto.support.parser.DotQualifiedExpressionSplitter.splitDotQualifiedExpression
-import com.giathuan.kotlinter.ktproto.support.parser.SetterResolver.getFieldFromValidSetterOrThrows
+import com.giathuan.kotlinter.ktproto.support.parser.SetterResolver.generateSingleSetter
 import com.giathuan.kotlinter.ktproto.support.utility.KtTypeVerifier.isBuilderOf
 import com.giathuan.kotlinter.ktproto.support.utility.KtTypeVerifier.isSubclassOf
+import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.idea.core.resolveType
 import org.jetbrains.kotlin.idea.intentions.callExpression
 import org.jetbrains.kotlin.psi.KtCallExpression
@@ -101,7 +102,7 @@ object JavaProtoExpressionResolver {
         return false
       }
       val setter = grandParent.parent as KtCallExpression
-      getFieldFromValidSetterOrThrows(setter)
+      generateSingleSetter(setter, avoidThisExpression = false)
     } catch (t: Throwable) {
       return false
     }
@@ -112,8 +113,11 @@ object JavaProtoExpressionResolver {
    * Returns true if it's an expression like MyMessage.newBuilder().setSomething(x) where .build()
    * is missing.
    */
-  fun isJavaProtoMissingBuildExpression(element: KtDotQualifiedExpression): Boolean {
+  fun isJavaProtoMissingBuildExpression(element: PsiElement): Boolean {
     try {
+      if (element !is KtDotQualifiedExpression) {
+        return false
+      }
       val messageType = element.resolveType()
       if (!messageType.isSubclassOf(JavaProtoConstants.MESSAGE_LITE_OR_BUILDER_TYPENAME)) {
         return false
@@ -126,7 +130,7 @@ object JavaProtoExpressionResolver {
       }
 
       val lastSetter = element.callExpression as KtCallExpression
-      getFieldFromValidSetterOrThrows(lastSetter)
+      generateSingleSetter(lastSetter, avoidThisExpression = false)
     } catch (t: Throwable) {
       return false
     }

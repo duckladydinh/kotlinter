@@ -4,6 +4,7 @@ package com.giathuan.kotlinter.ktproto.support.model
 object JavaProtoConstants {
   const val MESSAGE_LITE_TYPENAME = "com.google.protobuf.MessageLite"
   const val MESSAGE_LITE_OR_BUILDER_TYPENAME = "com.google.protobuf.MessageLiteOrBuilder"
+  const val GENERATED_EXTENSION_TYPENAME = "com.google.protobuf.ExtensionLite"
 
   const val BUILD_CALL = "build()"
   const val GET_DEFAULT_INSTANCE_CALL = "getDefaultInstance()"
