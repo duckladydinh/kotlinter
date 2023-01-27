@@ -2,16 +2,18 @@
  * To build the plugin for a particular .properties file, run the following command
  *
  * ```
- * ./gradlew signPlugin -Dconfig=IntelliJ213.properties -DminorVersion=$(git rev-parse --short HEAD)
+ * ./gradlew signPlugin -Dconfig=IntelliJ221.properties -DminorVersion=$(git rev-parse --short HEAD)
  *
  * ```
+ *
+ * And check for the .zip plugin in the build/distribution directory.
  *
  * For development (with debugging enabled), we suggest setting the default config file and using
  * the IntelliJ Run Configuration to call `runIde`.
  */
 import java.util.*
 
-val configFile: String = System.getProperty("config", "IntelliJ213.properties")
+val configFile: String = System.getProperty("config", "IntelliJ221.properties")
 val minorVersion: String = System.getProperty("minorVersion", "unversioned")
 val config = Properties().apply { load(file("${rootProject.rootDir}/$configFile").inputStream()) }
 
@@ -23,8 +25,8 @@ val intellijMaxBuildVersion: String = config.getProperty("intellij.build.max.ver
 
 plugins {
   id("java")
-  kotlin("jvm") version "1.7.20"
-  id("org.jetbrains.intellij") version "1.9.0"
+  kotlin("jvm") version "1.8.0"
+  id("org.jetbrains.intellij") version "1.12.0"
 }
 
 group = "com.giathuan"
@@ -45,7 +47,7 @@ intellij {
           "com.intellij.java",
           "org.jetbrains.kotlin",
           // "com.google.idea.bazel.ijwb:2022.06.28.0.0-api-version-213",
-          ))
+      ))
 }
 
 tasks {
