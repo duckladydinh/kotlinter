@@ -26,7 +26,7 @@ val intellijMaxBuildVersion: String = config.getProperty("intellij.build.max.ver
 plugins {
   id("java")
   kotlin("jvm") version "1.8.0"
-  id("org.jetbrains.intellij") version "1.12.0"
+  id("org.jetbrains.intellij") version "1.13.3"
 }
 
 group = "com.giathuan"
