@@ -8,7 +8,7 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.codeInspection.ui.MultipleCheckboxOptionsPanel
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElementVisitor
-import org.jetbrains.kotlin.idea.inspections.AbstractKotlinInspection
+import org.jetbrains.kotlin.idea.codeinsight.api.classic.inspections.AbstractKotlinInspection
 import org.jetbrains.kotlin.idea.intentions.callExpression
 import org.jetbrains.kotlin.idea.util.CommentSaver
 import org.jetbrains.kotlin.psi.KtCallExpression
@@ -41,9 +41,8 @@ class KtProtoSetterUsingBuilderArgumentInspection(
     if (isJavaProtoMissingBuildExpression(element)) {
       val lastSetter = element.callExpression as KtCallExpression
       holder.registerProblem(
-          lastSetter.originalElement,
-          "Kotlinter: You should add a .build()",
-          AddBuildQuickFix())
+        lastSetter.originalElement, "Kotlinter: You should add a .build()", AddBuildQuickFix()
+      )
     }
   }
 

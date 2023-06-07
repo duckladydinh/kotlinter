@@ -13,7 +13,7 @@
  */
 import java.util.*
 
-val configFile: String = System.getProperty("config", "IntelliJ221.properties")
+val configFile: String = System.getProperty("config", "IntelliJ223.properties")
 val minorVersion: String = System.getProperty("minorVersion", "unversioned")
 val config = Properties().apply { load(file("${rootProject.rootDir}/$configFile").inputStream()) }
 
@@ -25,8 +25,8 @@ val intellijMaxBuildVersion: String = config.getProperty("intellij.build.max.ver
 
 plugins {
   id("java")
-  kotlin("jvm") version "1.8.0"
-  id("org.jetbrains.intellij") version "1.13.3"
+  kotlin("jvm") version "1.8.10"
+  id("org.jetbrains.intellij") version "1.14.0"
 }
 
 group = "com.giathuan"
@@ -44,9 +44,9 @@ intellij {
   version.set(intellijIdeVersion)
   plugins.set(
       listOf(
-          "com.intellij.java",
-          "org.jetbrains.kotlin",
-          // "com.google.idea.bazel.ijwb:2022.06.28.0.0-api-version-213",
+        "com.intellij.java",
+        "org.jetbrains.kotlin",
+        "com.google.idea.bazel.ijwb:2023.05.16.0.1-api-version-223",
       ))
 }
 
