@@ -46,7 +46,7 @@ intellij {
       listOf(
         "com.intellij.java",
         "org.jetbrains.kotlin",
-        "com.google.idea.bazel.ijwb:2023.05.16.0.1-api-version-223",
+        // "com.google.idea.bazel.ijwb:2023.05.16.0.1-api-version-223",
       ))
 }
 
