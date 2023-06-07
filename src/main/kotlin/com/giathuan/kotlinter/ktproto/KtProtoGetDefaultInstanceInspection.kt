@@ -2,7 +2,6 @@ package com.giathuan.kotlinter.ktproto
 
 import com.giathuan.kotlinter.ktproto.support.fix.ExpressionReplacerQuickFix
 import com.giathuan.kotlinter.ktproto.support.parser.JavaProtoExpressionResolver.parseJavaGetDefaultInstanceExpression
-import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElementVisitor
 import org.jetbrains.kotlin.idea.inspections.AbstractKotlinInspection
@@ -26,7 +25,6 @@ class KtProtoGetDefaultInstanceInspection : AbstractKotlinInspection() {
     holder.registerProblem(
         element.originalElement,
         "Kotlinter: Better DSL for .getDefaultInstance() is available in Kotlin",
-        ProblemHighlightType.WARNING,
         ExpressionReplacerQuickFix(dsl, "Kotlinter: Transform .getDefaultInstance() to Kotlin DS"))
   }
 }
