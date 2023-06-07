@@ -9,7 +9,6 @@ import com.giathuan.kotlinter.ktproto.support.model.KtProtoCreatorExpression.Com
 import com.giathuan.kotlinter.ktproto.support.parser.JavaProtoExpressionResolver.parseJavaProtoBuildExpression
 import com.giathuan.kotlinter.ktproto.support.parser.SetterResolver.buildSettersCode
 import com.giathuan.kotlinter.ktproto.support.utility.StringTransformer.unwrapRoundBracket
-import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.codeInspection.ui.MultipleCheckboxOptionsPanel
 import com.intellij.psi.PsiElementVisitor
@@ -46,7 +45,6 @@ class KtProtoCreationInspection(@JvmField var avoidThisExpression: Boolean = fal
     holder.registerProblem(
         element.originalElement,
         "Kotlinter: Better DSL for proto builder is available in Kotlin",
-        ProblemHighlightType.WARNING,
         ExpressionReplacerQuickFix(dsl, name = "Kotlinter: Transform to Kotlin DSL"))
   }
 
