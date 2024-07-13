@@ -26,8 +26,8 @@ Kotlin DSL
 
 ```kotlin
 message {
-	this.fieldOne = 1
-	this.fieldTwo += 2
+  this.fieldOne = 1
+  this.fieldTwo += 2
 }
 ```
 
@@ -49,3 +49,8 @@ If yes, you are coming to the right place.
 ## Contribution
 
 We would appreciate your contribution to make it better.
+
+**IMPORTANT**: Currently, this project lacks tests (in the sense that it doesn't have any test at all). Jetbrains
+documentation in this regard is very poor to the point of incomprehensible. Therefore, I couldn't add more features as
+manual testing is hard. If you can understand Jetbrains documentation (if exists) or if you would
+like to see this product in more active development, I would appreciate your contribution to add tests.
