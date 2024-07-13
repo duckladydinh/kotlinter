@@ -11,6 +11,7 @@
  * For development (with debugging enabled), we suggest setting the default config file and using
  * the IntelliJ Run Configuration to call `runIde`.
  */
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.*
 
 val configFile: String = System.getProperty("config", "IntelliJ223.properties")
@@ -19,14 +20,16 @@ val config = Properties().apply { load(file("${rootProject.rootDir}/$configFile"
 
 val kotlinterMinorVersion = 2
 val intellijJvmVersion: String = config.getProperty("intellij.jvm.version")
+val intellijJavaVersion: JavaVersion = JavaVersion.toVersion(intellijJvmVersion.toInt())
+val intellijJvmTarget: JvmTarget = JvmTarget.valueOf("JVM_$intellijJvmVersion")
 val intellijIdeVersion: String = config.getProperty("intellij.ide.version")
 val intellijMinBuildVersion: String = config.getProperty("intellij.build.min.version")
 val intellijMaxBuildVersion: String = config.getProperty("intellij.build.max.version")
 
 plugins {
   id("java")
-  kotlin("jvm") version "1.8.10"
-  id("org.jetbrains.intellij") version "1.14.0"
+  kotlin("jvm") version "2.0.0"
+  id("org.jetbrains.intellij") version "1.17.4"
 }
 
 group = "com.giathuan"
@@ -37,17 +40,18 @@ repositories { mavenCentral() }
 
 dependencies { testImplementation(kotlin("test")) }
 
-java { sourceCompatibility = JavaVersion.toVersion(intellijJvmVersion.toInt()) }
+java { sourceCompatibility = intellijJavaVersion }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
   version.set(intellijIdeVersion)
   plugins.set(
-      listOf(
-        "com.intellij.java",
-        "org.jetbrains.kotlin",
-        // "com.google.idea.bazel.ijwb:2023.05.16.0.1-api-version-223",
-      ))
+    listOf(
+      "com.intellij.java",
+      "org.jetbrains.kotlin",
+      // "com.google.idea.bazel.ijwb:2023.05.16.0.1-api-version-223",
+    )
+  )
 }
 
 tasks {
@@ -63,7 +67,7 @@ tasks {
 
   publishPlugin { token.set(System.getenv("ORG_GRADLE_PROJECT_intellijPublishToken")) }
 
-  compileKotlin { kotlinOptions.jvmTarget = intellijJvmVersion }
+  compileKotlin { compilerOptions.jvmTarget.set(intellijJvmTarget) }
 
-  compileTestKotlin { kotlinOptions.jvmTarget = intellijJvmVersion }
+  compileTestKotlin { compilerOptions.jvmTarget.set(intellijJvmTarget) }
 }
