@@ -22,5 +22,5 @@ object StringTransformer {
    * case letter).
    */
   fun toKtClassNameOrOriginal(text: String): String =
-      if (startsWithUpperCase(text)) text + "Kt" else text
+    if (startsWithUpperCase(text)) text + "Kt" else text
 }

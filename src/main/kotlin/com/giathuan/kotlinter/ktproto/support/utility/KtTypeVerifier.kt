@@ -11,12 +11,12 @@ object KtTypeVerifier {
    * name.
    */
   fun KotlinType?.isSubclassOf(qualifiedClassName: String): Boolean =
-      this?.supertypes()?.any { it.serialName() == qualifiedClassName } == true
+    this?.supertypes()?.any { it.serialName() == qualifiedClassName } == true
 
   /**
    * Returns true if the [KotlinType] is a proto builder of the class referenced by its fully
    * qualified name.
    */
   fun KotlinType?.isBuilderOf(qualifiedClassName: String): Boolean =
-      this?.serialName() == "$qualifiedClassName.Builder"
+    this?.serialName() == "$qualifiedClassName.Builder"
 }

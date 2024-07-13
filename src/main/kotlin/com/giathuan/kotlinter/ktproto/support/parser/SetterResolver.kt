@@ -15,9 +15,9 @@ import org.jetbrains.kotlin.psi.KtExpression
 object SetterResolver {
   /** Returns unformatted DSL for proto setters only. */
   fun buildSettersCode(
-      parts: List<KtExpression>,
-      firstSetterIndex: Int,
-      avoidThisExpression: Boolean
+    parts: List<KtExpression>,
+    firstSetterIndex: Int,
+    avoidThisExpression: Boolean,
   ): String {
     val builder = StringBuilder()
     for (i in firstSetterIndex until parts.size) {
@@ -48,11 +48,13 @@ object SetterResolver {
   fun generateSingleSetter(javaSetter: KtCallExpression, avoidThisExpression: Boolean): String {
     // Special case for .setExtension(e, x).
     val callName = javaSetter.callName()
-    if (callName == "setExtension" &&
-        javaSetter.valueArguments.size == 2 &&
-        (javaSetter.valueArguments[0].lastChild as KtExpression)
-            .resolveType()
-            .isSubclassOf(JavaProtoConstants.GENERATED_EXTENSION_TYPENAME)) {
+    if (
+      callName == "setExtension" &&
+      javaSetter.valueArguments.size == 2 &&
+      (javaSetter.valueArguments[0].lastChild as KtExpression)
+        .resolveType()
+        .isSubclassOf(JavaProtoConstants.GENERATED_EXTENSION_TYPENAME)
+    ) {
       return "this[${javaSetter.valueArguments[0].text.trim()}] = ${javaSetter.valueArguments[1].text.trim()}"
     }
 
@@ -67,9 +69,11 @@ object SetterResolver {
     // Add `this.` if needed.
     val fieldName = extractFieldNameFromCallName(callName)
     val isArgProtoBuilderMissingBuild =
-        isJavaProtoMissingBuildExpression(javaSetter.valueArguments[0].lastChild)
-    if (!avoidThisExpression ||
-        (fieldName == javaSetter.valueArguments[0].text && !isArgProtoBuilderMissingBuild)) {
+      isJavaProtoMissingBuildExpression(javaSetter.valueArguments[0].lastChild)
+    if (
+      !avoidThisExpression ||
+      (fieldName == javaSetter.valueArguments[0].text && !isArgProtoBuilderMissingBuild)
+    ) {
       builder.append("this.")
     }
 
@@ -92,15 +96,19 @@ object SetterResolver {
   }
 
   private fun extractFieldNameFromCallName(callName: String): String {
-    if (callName.startsWith(JavaProtoConstants.ADD_ALL_PREFIX) &&
-        callName.length > 6 &&
-        callName[6].isUpperCase()) {
+    if (
+      callName.startsWith(JavaProtoConstants.ADD_ALL_PREFIX) &&
+      callName.length > 6 &&
+      callName[6].isUpperCase()
+    ) {
       return StringTransformer.variableCase(callName.drop(6))
     }
-    if ((callName.startsWith(JavaProtoConstants.SET_PREFIX) ||
-        callName.startsWith(JavaProtoConstants.ADD_PREFIX)) &&
-        callName.length > 3 &&
-        callName[3].isUpperCase()) {
+    if (
+      (callName.startsWith(JavaProtoConstants.SET_PREFIX) ||
+          callName.startsWith(JavaProtoConstants.ADD_PREFIX)) &&
+      callName.length > 3 &&
+      callName[3].isUpperCase()
+    ) {
       return StringTransformer.variableCase(callName.drop(3))
     }
     throw IllegalArgumentException("Definitely not a setter: $callName")

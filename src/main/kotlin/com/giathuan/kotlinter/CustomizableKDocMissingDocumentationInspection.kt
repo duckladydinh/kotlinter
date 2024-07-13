@@ -30,9 +30,9 @@ import org.jetbrains.kotlin.resolve.descriptorUtil.isEffectivelyPublicApi
 import javax.swing.JComponent
 
 class CustomizableKDocMissingDocumentationInspection(
-    @JvmField var ignoreTests: Boolean = false,
-    @JvmField var ignoreOverrideElements: Boolean = true,
-    @JvmField var ignoreNonOverridableProperties: Boolean = true
+  @JvmField var ignoreTests: Boolean = false,
+  @JvmField var ignoreOverrideElements: Boolean = true,
+  @JvmField var ignoreNonOverridableProperties: Boolean = true,
 ) : AbstractKotlinInspection() {
 
   override fun createOptionsPanel(): JComponent {
@@ -44,37 +44,44 @@ class CustomizableKDocMissingDocumentationInspection(
   }
 
   override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor =
-      namedDeclarationVisitor { element ->
-        if (TestUtils.isInTestSourceContent(element) &&
-            (ignoreTests || element.containingFile.name.endsWith(KOTLIN_TEST_FILE_SUFFIX))) {
+    namedDeclarationVisitor { element ->
+      if (
+        TestUtils.isInTestSourceContent(element) &&
+        (ignoreTests || element.containingFile.name.endsWith(KOTLIN_TEST_FILE_SUFFIX))
+      ) {
+        return@namedDeclarationVisitor
+      }
+      val nameIdentifier = element.nameIdentifier
+      if (nameIdentifier != null) {
+        if (
+          ignoreOverrideElements &&
+          element.modifierList?.hasModifier(KtTokens.OVERRIDE_KEYWORD) == true
+        ) {
           return@namedDeclarationVisitor
         }
-        val nameIdentifier = element.nameIdentifier
-        if (nameIdentifier != null) {
-          if (ignoreOverrideElements &&
-              element.modifierList?.hasModifier(KtTokens.OVERRIDE_KEYWORD) == true) {
+        if (
+          element.findKDoc { DescriptorToSourceUtilsIde.getAnyDeclaration(element.project, it) } ==
+          null
+        ) {
+          val descriptor =
+            element.resolveToDescriptorIfAny() as? DeclarationDescriptorWithVisibility
+              ?: return@namedDeclarationVisitor
+          if (
+            ignoreNonOverridableProperties &&
+            descriptor is PropertyDescriptor &&
+            !descriptor.isOverridable
+          ) {
             return@namedDeclarationVisitor
           }
-          if (element.findKDoc {
-            DescriptorToSourceUtilsIde.getAnyDeclaration(element.project, it)
-          } == null) {
-            val descriptor =
-                element.resolveToDescriptorIfAny() as? DeclarationDescriptorWithVisibility
-                    ?: return@namedDeclarationVisitor
-            if (ignoreNonOverridableProperties &&
-                descriptor is PropertyDescriptor &&
-                !descriptor.isOverridable) {
-              return@namedDeclarationVisitor
-            }
-            if (descriptor.isEffectivelyPublicApi) {
-              val message =
-                  element.describe()?.let { "Kotlinter: $it is missing documentation" }
-                      ?: "Kotlinter: Missing documentation"
-              holder.registerProblem(nameIdentifier, message, AddDocumentationFix())
-            }
+          if (descriptor.isEffectivelyPublicApi) {
+            val message =
+              element.describe()?.let { "Kotlinter: $it is missing documentation" }
+                ?: "Kotlinter: Missing documentation"
+            holder.registerProblem(nameIdentifier, message, AddDocumentationFix())
           }
         }
       }
+    }
 
   private class AddDocumentationFix : LocalQuickFix {
     override fun getName(): String = "Kotlinter: Add documentation"
@@ -84,11 +91,13 @@ class CustomizableKDocMissingDocumentationInspection(
     override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
       try {
         val declaration =
-            descriptor.psiElement.getParentOfType<KtNamedDeclaration>(true)
-                ?: throw IllegalStateException("Can't find declaration")
+          descriptor.psiElement.getParentOfType<KtNamedDeclaration>(true)
+            ?: throw IllegalStateException("Can't find declaration")
 
         declaration.addBefore(
-            KDocElementFactory(project).createKDocFromText("/**\n*\n*/\n"), declaration.firstChild)
+          KDocElementFactory(project).createKDocFromText("/**\n*\n*/\n"),
+          declaration.firstChild,
+        )
 
         val editor = descriptor.psiElement.findExistingEditor() ?: return
 

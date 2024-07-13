@@ -17,9 +17,9 @@ interface KtProtoCopyExpression {
 
   /** Returns the unformatted DSL. */
   fun text(): String =
-      """${getCopySource()}.copy {
+    """${getCopySource()}.copy {
 		  ${getSettersCode()}
 		  }
 		  """
-          .trimIndent()
+      .trimIndent()
 }

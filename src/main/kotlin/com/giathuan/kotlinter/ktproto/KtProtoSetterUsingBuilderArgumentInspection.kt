@@ -22,29 +22,31 @@ import javax.swing.JComponent
  * transformation to add .build() if it's a proto setter argument.
  */
 class KtProtoSetterUsingBuilderArgumentInspection(
-    @JvmField var fixNonProtoSetterExpressions: Boolean = false
+  @JvmField var fixNonProtoSetterExpressions: Boolean = false
 ) : AbstractKotlinInspection() {
 
   override fun createOptionsPanel(): JComponent =
-      MultipleCheckboxOptionsPanel(this).apply {
-        addCheckbox("Fix expressions outside proto-setters", "fixNonProtoSetterExpressions")
-      }
+    MultipleCheckboxOptionsPanel(this).apply {
+      addCheckbox("Fix expressions outside proto-setters", "fixNonProtoSetterExpressions")
+    }
 
-  override fun buildVisitor(
-      holder: ProblemsHolder,
-      isOnTheFly: Boolean,
-  ): PsiElementVisitor = dotQualifiedExpressionVisitor { element ->
-    if (element.parent is KtDotQualifiedExpression ||
-        (!fixNonProtoSetterExpressions && !isArgumentOfSomeProtoSetter(element))) {
-      return@dotQualifiedExpressionVisitor
+  override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor =
+    dotQualifiedExpressionVisitor { element ->
+      if (
+        element.parent is KtDotQualifiedExpression ||
+        (!fixNonProtoSetterExpressions && !isArgumentOfSomeProtoSetter(element))
+      ) {
+        return@dotQualifiedExpressionVisitor
+      }
+      if (isJavaProtoMissingBuildExpression(element)) {
+        val lastSetter = element.callExpression as KtCallExpression
+        holder.registerProblem(
+          lastSetter.originalElement,
+          "Kotlinter: You should add a .build()",
+          AddBuildQuickFix(),
+        )
+      }
     }
-    if (isJavaProtoMissingBuildExpression(element)) {
-      val lastSetter = element.callExpression as KtCallExpression
-      holder.registerProblem(
-        lastSetter.originalElement, "Kotlinter: You should add a .build()", AddBuildQuickFix()
-      )
-    }
-  }
 
   private class AddBuildQuickFix : LocalQuickFix {
     override fun getName(): String = "Kotlinter: Add a .build()"

@@ -22,12 +22,11 @@ import org.jetbrains.kotlinx.serialization.compiler.backend.common.serialName
 object JavaProtoExpressionResolver {
   /** Returns myMessage {} for MyMessage.getDefaultInstance(). */
   fun parseJavaGetDefaultInstanceExpression(
-      element: KtDotQualifiedExpression
+    element: KtDotQualifiedExpression
   ): KtProtoCreatorExpression {
     val text = element.text
     val getDefaultInstantExpressionCallText =
-        element.callExpression?.text
-            ?: throw invalid("The last part is not a call expression: $text")
+      element.callExpression?.text ?: throw invalid("The last part is not a call expression: $text")
 
     if (getDefaultInstantExpressionCallText != JavaProtoConstants.GET_DEFAULT_INSTANCE_CALL) {
       throw invalid("It misses .getDefaultInstance() call: $text")
@@ -42,6 +41,7 @@ object JavaProtoExpressionResolver {
     val ktCreatorFunc = buildKtProtoCreatorFunc(parts, simpleTypeNameIndex = parts.lastIndex - 1)
     return object : KtProtoCreatorExpression {
       override fun getCreatorFunc(): String = ktCreatorFunc
+
       override fun getSettersCode(): String = ""
     }
   }
@@ -51,12 +51,11 @@ object JavaProtoExpressionResolver {
    * MyMessage.newBuilder().setSomething(x).build().
    */
   fun parseJavaProtoBuildExpression(
-      element: KtDotQualifiedExpression
+    element: KtDotQualifiedExpression
   ): JavaProtoExpressionParsedData {
     val text = element.text
     val buildCallText =
-        element.callExpression?.text
-            ?: throw invalid("The last part is not a call expression: $text")
+      element.callExpression?.text ?: throw invalid("The last part is not a call expression: $text")
 
     if (buildCallText != JavaProtoConstants.BUILD_CALL) {
       throw invalid("It misses .build() call: $text")
@@ -68,8 +67,10 @@ object JavaProtoExpressionResolver {
       throw invalid("The type is not MessageLite: $text")
     }
 
-    if (!text.contains(JavaProtoConstants.NEW_BUILDER_CALL_NAME) &&
-        !text.contains(JavaProtoConstants.TO_BUILDER_CALL)) {
+    if (
+      !text.contains(JavaProtoConstants.NEW_BUILDER_CALL_NAME) &&
+      !text.contains(JavaProtoConstants.TO_BUILDER_CALL)
+    ) {
       throw invalid("It misses builder calls: $element")
     }
 
@@ -83,7 +84,8 @@ object JavaProtoExpressionResolver {
       val partType = part.resolveType()
       if (!partType.isBuilderOf(messageTypeSerialName)) {
         throw invalid(
-            "Expected to be builder of $messageTypeSerialName but was ${partType?.serialName()}")
+          "Expected to be builder of $messageTypeSerialName but was ${partType?.serialName()}"
+        )
       }
 
       // Stops if encounters .newBuilder() or .newBuilder(anotherMessage).
@@ -124,8 +126,10 @@ object JavaProtoExpressionResolver {
       }
 
       val text = element.text
-      if (!text.contains(JavaProtoConstants.NEW_BUILDER_CALL_NAME) &&
-          !text.contains(JavaProtoConstants.TO_BUILDER_CALL)) {
+      if (
+        !text.contains(JavaProtoConstants.NEW_BUILDER_CALL_NAME) &&
+        !text.contains(JavaProtoConstants.TO_BUILDER_CALL)
+      ) {
         return false
       }
 
@@ -138,5 +142,5 @@ object JavaProtoExpressionResolver {
   }
 
   private fun invalid(reason: String) =
-      IllegalArgumentException("Invalid Java proto build expression: $reason")
+    IllegalArgumentException("Invalid Java proto build expression: $reason")
 }

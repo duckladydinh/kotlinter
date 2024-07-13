@@ -8,24 +8,22 @@ import org.jetbrains.kotlin.idea.codeinsight.api.classic.inspections.AbstractKot
 import org.jetbrains.kotlin.psi.dotQualifiedExpressionVisitor
 
 /**
- * An IntelliJ inspection to detect Java proto empty creation like
- * `MyMessage.getDefaultInstance()` and suggest transformation to Kotlin
- * DSL like `myMessage {}`.
+ * An IntelliJ inspection to detect Java proto empty creation like `MyMessage.getDefaultInstance()`
+ * and suggest transformation to Kotlin DSL like `myMessage {}`.
  */
 class KtProtoGetDefaultInstanceInspection : AbstractKotlinInspection() {
-  override fun buildVisitor(
-      holder: ProblemsHolder,
-      isOnTheFly: Boolean,
-  ): PsiElementVisitor = dotQualifiedExpressionVisitor { element ->
-    val dsl =
+  override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor =
+    dotQualifiedExpressionVisitor { element ->
+      val dsl =
         try {
           parseJavaGetDefaultInstanceExpression(element).text()
         } catch (t: Throwable) {
           return@dotQualifiedExpressionVisitor
         }
-    holder.registerProblem(
+      holder.registerProblem(
         element.originalElement,
         "Kotlinter: Better DSL for .getDefaultInstance() is available in Kotlin",
-        ExpressionReplacerQuickFix(dsl, "Kotlinter: Transform .getDefaultInstance() to Kotlin DS"))
-  }
+        ExpressionReplacerQuickFix(dsl, "Kotlinter: Transform .getDefaultInstance() to Kotlin DS"),
+      )
+    }
 }

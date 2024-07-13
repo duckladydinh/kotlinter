@@ -12,7 +12,7 @@ import org.jetbrains.kotlin.psi.KtPsiFactory
  * applies.
  */
 class ExpressionReplacerQuickFix(private val text: String, private val name: String) :
-    LocalQuickFix {
+  LocalQuickFix {
   override fun getName(): String = name
 
   override fun getFamilyName(): String = name

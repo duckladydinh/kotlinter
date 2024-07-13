@@ -24,7 +24,7 @@ interface KtProtoCreatorExpression {
 		  ${getSettersCode()}
 		  }
 		  """
-        .trimIndent()
+      .trimIndent()
   }
 
   companion object {
@@ -33,16 +33,17 @@ interface KtProtoCreatorExpression {
       val typeSimpleName = parts[simpleTypeNameIndex].text
       if (!StringTransformer.startsWithUpperCase(typeSimpleName)) {
         throw IllegalArgumentException(
-            "The simple message name must starts with an upper case: $typeSimpleName")
+          "The simple message name must starts with an upper case: $typeSimpleName"
+        )
       }
       val builder = StringBuilder()
       if (simpleTypeNameIndex > 0) {
         val prefix =
-            parts
-                .slice(0 until simpleTypeNameIndex)
-                .map { (it as KtNameReferenceExpression).text }
-                .joinToString(".") { toKtClassNameOrOriginal(it) }
-                .trim()
+          parts
+            .slice(0 until simpleTypeNameIndex)
+            .map { (it as KtNameReferenceExpression).text }
+            .joinToString(".") { toKtClassNameOrOriginal(it) }
+            .trim()
         builder.append(prefix)
         builder.append(".")
       }
