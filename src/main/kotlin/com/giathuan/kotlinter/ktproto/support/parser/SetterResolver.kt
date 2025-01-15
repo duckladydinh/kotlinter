@@ -7,7 +7,6 @@ import com.giathuan.kotlinter.ktproto.support.utility.KtTypeVerifier.isSubclassO
 import com.giathuan.kotlinter.ktproto.support.utility.StringTransformer
 import com.giathuan.kotlinter.ktproto.support.utility.StringTransformer.unwrapRoundBracket
 import org.jetbrains.kotlin.idea.core.resolveType
-import org.jetbrains.kotlin.idea.debugger.sequence.psi.callName
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtExpression
 
@@ -20,7 +19,7 @@ object SetterResolver {
     avoidThisExpression: Boolean,
   ): String {
     val builder = StringBuilder()
-    for (i in firstSetterIndex until parts.size) {
+    for (i in firstSetterIndex..<parts.size) {
       val javaSetter = parts[i] as KtCallExpression
       // Since func is inside a dot-qualified call chain, its previous sibling is a dot.
       val precedingCommentsBlock = PrecedingCommentsBlock.query(javaSetter.prevSibling)
@@ -47,7 +46,8 @@ object SetterResolver {
   /** Generates Kotlin DSL for a single Java setter. */
   fun generateSingleSetter(javaSetter: KtCallExpression, avoidThisExpression: Boolean): String {
     // Special case for .setExtension(e, x).
-    val callName = javaSetter.callName()
+    val callName = javaSetter.calleeExpression!!.text
+    @Suppress("UnstableApiUsage")
     if (
       callName == "setExtension" &&
       javaSetter.valueArguments.size == 2 &&

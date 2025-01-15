@@ -40,7 +40,7 @@ interface KtProtoCreatorExpression {
       if (simpleTypeNameIndex > 0) {
         val prefix =
           parts
-            .slice(0 until simpleTypeNameIndex)
+            .slice(0..<simpleTypeNameIndex)
             .map { (it as KtNameReferenceExpression).text }
             .joinToString(".") { toKtClassNameOrOriginal(it) }
             .trim()

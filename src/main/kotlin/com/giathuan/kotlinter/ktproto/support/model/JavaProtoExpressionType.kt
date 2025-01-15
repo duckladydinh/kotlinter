@@ -1,6 +1,5 @@
 package com.giathuan.kotlinter.ktproto.support.model
 
-import org.jetbrains.kotlin.idea.debugger.sequence.psi.callName
 import org.jetbrains.kotlin.psi.KtCallExpression
 
 /** Different types of proto builder creation. */
@@ -17,7 +16,7 @@ enum class JavaProtoExpressionType {
   companion object {
     /** Returns [JavaProtoExpressionType] for the given builder creation call. */
     fun toJavaBuilderExpressionType(part: KtCallExpression): JavaProtoExpressionType? {
-      val callName = part.callName()
+      val callName = part.calleeExpression!!.text
       val numArgs = part.valueArguments.size
       if ((callName == JavaProtoConstants.TO_BUILDER_CALL_NAME) && (numArgs == 0)) {
         return BUILD_FROM_TO_BUILDER_EMPTY

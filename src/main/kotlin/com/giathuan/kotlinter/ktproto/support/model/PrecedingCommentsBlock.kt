@@ -3,7 +3,7 @@ package com.giathuan.kotlinter.ktproto.support.model
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.idea.base.psi.getLineNumber
-import org.jetbrains.kotlin.j2k.isInSingleLine
+import org.jetbrains.kotlin.nj2k.isInSingleLine
 import org.jetbrains.kotlin.psi.psiUtil.getPrevSiblingIgnoringWhitespace
 
 /** A model for preceding comments of some element. */

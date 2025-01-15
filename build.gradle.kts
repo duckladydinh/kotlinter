@@ -2,7 +2,7 @@
  * To build the plugin for a particular .properties file, run the following command
  *
  * ```
- * ./gradlew signPlugin -Dconfig=IntelliJ221.properties -DminorVersion=$(git rev-parse --short HEAD)
+ * ./gradlew signPlugin -Dconfig=IntelliJ242.properties -DminorVersion=$(git rev-parse --short HEAD)
  *
  * ```
  *
@@ -11,63 +11,68 @@
  * For development (with debugging enabled), we suggest setting the default config file and using
  * the IntelliJ Run Configuration to call `runIde`.
  */
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import java.util.*
 
-val configFile: String = System.getProperty("config", "IntelliJ223.properties")
+val configFile: String = System.getProperty("config", "IntelliJ242.properties")
 val minorVersion: String = System.getProperty("minorVersion", "unversioned")
 val config = Properties().apply { load(file("${rootProject.rootDir}/$configFile").inputStream()) }
 
-val kotlinterMinorVersion = 2
 val intellijJvmVersion: String = config.getProperty("intellij.jvm.version")
 val intellijJavaVersion: JavaVersion = JavaVersion.toVersion(intellijJvmVersion.toInt())
-val intellijJvmTarget: JvmTarget = JvmTarget.valueOf("JVM_$intellijJvmVersion")
 val intellijIdeVersion: String = config.getProperty("intellij.ide.version")
 val intellijMinBuildVersion: String = config.getProperty("intellij.build.min.version")
-val intellijMaxBuildVersion: String = config.getProperty("intellij.build.max.version")
 
 plugins {
   id("java")
-  kotlin("jvm") version "2.0.0"
-  id("org.jetbrains.intellij") version "1.17.4"
+  kotlin("jvm") version "2.1.0"
+  id("org.jetbrains.intellij.platform") version "2.2.1"
 }
 
 group = "com.giathuan"
 
 version = "1.$intellijIdeVersion.$minorVersion"
 
-repositories { mavenCentral() }
+repositories {
+  mavenCentral()
 
-dependencies { testImplementation(kotlin("test")) }
+  intellijPlatform { defaultRepositories() }
+}
+
+dependencies {
+  intellijPlatform {
+    intellijIdeaCommunity(intellijIdeVersion)
+    bundledPlugin("com.intellij.java")
+    bundledPlugin("org.jetbrains.kotlin")
+    pluginVerifier()
+    zipSigner()
+    testFramework(TestFrameworkType.Platform)
+  }
+  testImplementation(kotlin("test"))
+}
 
 java { sourceCompatibility = intellijJavaVersion }
 
-// See https://github.com/JetBrains/gradle-intellij-plugin/
-intellij {
-  version.set(intellijIdeVersion)
-  plugins.set(
-    listOf(
-      "com.intellij.java",
-      "org.jetbrains.kotlin",
-      // "com.google.idea.bazel.ijwb:2023.05.16.0.1-api-version-223",
-    )
-  )
+intellijPlatform {
+  pluginConfiguration {
+    ideaVersion {
+      sinceBuild = intellijMinBuildVersion
+      untilBuild = provider { null }
+    }
+  }
+  pluginVerification { ides { recommended() } }
 }
 
 tasks {
-  runIde { autoReloadPlugins.set(true) }
+  runIde { autoReload = true }
 
   buildSearchableOptions { enabled = false }
 
-  patchPluginXml {
-    version.set("${project.version}")
-    sinceBuild.set(intellijMinBuildVersion)
-    untilBuild.set(intellijMaxBuildVersion)
+  signPlugin {
+    certificateChain.set(providers.environmentVariable("CERTIFICATE_CHAIN"))
+    privateKey.set(providers.environmentVariable("PRIVATE_KEY"))
+    password.set(providers.environmentVariable("PRIVATE_KEY_PASSWORD"))
   }
 
-  publishPlugin { token.set(System.getenv("ORG_GRADLE_PROJECT_intellijPublishToken")) }
-
-  compileKotlin { compilerOptions.jvmTarget.set(intellijJvmTarget) }
-
-  compileTestKotlin { compilerOptions.jvmTarget.set(intellijJvmTarget) }
+  publishPlugin { token.set(providers.environmentVariable("PUBLISH_TOKEN")) }
 }

@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 package com.giathuan.kotlinter.ktproto.support.parser
 
 import com.giathuan.kotlinter.ktproto.support.model.JavaProtoConstants
@@ -105,7 +107,7 @@ object JavaProtoExpressionResolver {
       }
       val setter = grandParent.parent as KtCallExpression
       generateSingleSetter(setter, avoidThisExpression = false)
-    } catch (t: Throwable) {
+    } catch (_: Throwable) {
       return false
     }
     return true
@@ -135,7 +137,7 @@ object JavaProtoExpressionResolver {
 
       val lastSetter = element.callExpression as KtCallExpression
       generateSingleSetter(lastSetter, avoidThisExpression = false)
-    } catch (t: Throwable) {
+    } catch (_: Throwable) {
       return false
     }
     return true

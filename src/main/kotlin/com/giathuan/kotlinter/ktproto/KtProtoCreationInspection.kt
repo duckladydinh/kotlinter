@@ -13,7 +13,7 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.codeInspection.ui.MultipleCheckboxOptionsPanel
 import com.intellij.psi.PsiElementVisitor
 import org.jetbrains.kotlin.idea.codeinsight.api.classic.inspections.AbstractKotlinInspection
-import org.jetbrains.kotlin.j2k.isInSingleLine
+import org.jetbrains.kotlin.nj2k.isInSingleLine
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.dotQualifiedExpressionVisitor
 import javax.swing.JComponent
@@ -37,7 +37,7 @@ class KtProtoCreationInspection(@JvmField var avoidThisExpression: Boolean = fal
         try {
           val javaProtoExpressionParsedData = parseJavaProtoBuildExpression(element)
           buildKtProtoDslFromJavaBuildExpression(javaProtoExpressionParsedData)
-        } catch (t: Throwable) {
+        } catch (_: Throwable) {
           return@dotQualifiedExpressionVisitor
         }
       holder.registerProblem(
@@ -79,7 +79,7 @@ class KtProtoCreationInspection(@JvmField var avoidThisExpression: Boolean = fal
       }
 
       JavaProtoExpressionType.BUILD_FROM_TO_BUILDER_EMPTY -> {
-        val copySrc = parts.slice(0 until buildCreatorIndex).joinToString(".") { it.text }
+        val copySrc = parts.slice(0..<buildCreatorIndex).joinToString(".") { it.text }
         return object : KtProtoCopyExpression {
           override fun getCopySource(): String = copySrc
 
