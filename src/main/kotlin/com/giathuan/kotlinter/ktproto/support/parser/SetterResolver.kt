@@ -1,19 +1,21 @@
 package com.giathuan.kotlinter.ktproto.support.parser
 
-import com.giathuan.kotlinter.ktproto.support.model.JavaProtoConstants
+import com.giathuan.kotlinter.ktproto.support.model.JavaProtoConstants.ADD_ALL_PREFIX
+import com.giathuan.kotlinter.ktproto.support.model.JavaProtoConstants.ADD_PREFIX
+import com.giathuan.kotlinter.ktproto.support.model.JavaProtoConstants.GENERATED_EXTENSION_TYPENAME
+import com.giathuan.kotlinter.ktproto.support.model.JavaProtoConstants.SET_PREFIX
 import com.giathuan.kotlinter.ktproto.support.model.PrecedingCommentsBlock
 import com.giathuan.kotlinter.ktproto.support.parser.JavaProtoExpressionResolver.isJavaProtoMissingBuildExpression
-import com.giathuan.kotlinter.ktproto.support.utility.KtTypeVerifier.isSubclassOf
-import com.giathuan.kotlinter.ktproto.support.utility.StringTransformer
 import com.giathuan.kotlinter.ktproto.support.utility.StringTransformer.unwrapRoundBracket
-import org.jetbrains.kotlin.idea.core.resolveType
+import com.giathuan.kotlinter.ktproto.support.utility.StringTransformer.variableCase
+import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtExpression
 
 /** Utilities to handle proto setters. */
 object SetterResolver {
   /** Returns unformatted DSL for proto setters only. */
-  fun buildSettersCode(
+  fun KaSession.buildSettersCode(
     parts: List<KtExpression>,
     firstSetterIndex: Int,
     avoidThisExpression: Boolean,
@@ -44,16 +46,18 @@ object SetterResolver {
   }
 
   /** Generates Kotlin DSL for a single Java setter. */
-  fun generateSingleSetter(javaSetter: KtCallExpression, avoidThisExpression: Boolean): String {
+  fun KaSession.generateSingleSetter(
+    javaSetter: KtCallExpression,
+    avoidThisExpression: Boolean,
+  ): String {
     // Special case for .setExtension(e, x).
     val callName = javaSetter.calleeExpression!!.text
-    @Suppress("UnstableApiUsage")
     if (
       callName == "setExtension" &&
       javaSetter.valueArguments.size == 2 &&
       (javaSetter.valueArguments[0].lastChild as KtExpression)
-        .resolveType()
-        .isSubclassOf(JavaProtoConstants.GENERATED_EXTENSION_TYPENAME)
+        .expressionType
+        ?.isSubtypeOf(GENERATED_EXTENSION_TYPENAME) == true
     ) {
       return "this[${javaSetter.valueArguments[0].text.trim()}] = ${javaSetter.valueArguments[1].text.trim()}"
     }
@@ -81,7 +85,7 @@ object SetterResolver {
     val rawValue = unwrapRoundBracket(javaSetter.lastChild.text)
     builder.append(fieldName)
     builder.append(" ")
-    if (callName.startsWith(JavaProtoConstants.ADD_PREFIX)) {
+    if (callName.startsWith(ADD_PREFIX)) {
       builder.append("+")
     }
     builder.append("= ")
@@ -97,19 +101,19 @@ object SetterResolver {
 
   private fun extractFieldNameFromCallName(callName: String): String {
     if (
-      callName.startsWith(JavaProtoConstants.ADD_ALL_PREFIX) &&
-      callName.length > 6 &&
-      callName[6].isUpperCase()
+      callName.startsWith(ADD_ALL_PREFIX) &&
+      callName.length > ADD_ALL_PREFIX.length &&
+      callName[ADD_ALL_PREFIX.length].isUpperCase()
     ) {
-      return StringTransformer.variableCase(callName.drop(6))
+      return variableCase(callName.drop(ADD_ALL_PREFIX.length))
     }
     if (
-      (callName.startsWith(JavaProtoConstants.SET_PREFIX) ||
-          callName.startsWith(JavaProtoConstants.ADD_PREFIX)) &&
-      callName.length > 3 &&
-      callName[3].isUpperCase()
+    // SET_PREFIX and ADD_PREFIX have the same length.
+      (callName.startsWith(SET_PREFIX) || callName.startsWith(ADD_PREFIX)) &&
+      callName.length > ADD_PREFIX.length &&
+      callName[ADD_PREFIX.length].isUpperCase()
     ) {
-      return StringTransformer.variableCase(callName.drop(3))
+      return variableCase(callName.drop(ADD_PREFIX.length))
     }
     throw IllegalArgumentException("Definitely not a setter: $callName")
   }

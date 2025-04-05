@@ -1,10 +1,13 @@
 package com.giathuan.kotlinter.ktproto.support.model
 
+import org.jetbrains.kotlin.name.ClassId
+
 /** Common Java proto constants. */
 object JavaProtoConstants {
-  const val MESSAGE_LITE_TYPENAME = "com.google.protobuf.MessageLite"
-  const val MESSAGE_LITE_OR_BUILDER_TYPENAME = "com.google.protobuf.MessageLiteOrBuilder"
-  const val GENERATED_EXTENSION_TYPENAME = "com.google.protobuf.ExtensionLite"
+  private const val PROTO_PACKAGE = "com/google/protobuf"
+  val MESSAGE_LITE_TYPENAME = ClassId.fromString("$PROTO_PACKAGE/MessageLite")
+  val MESSAGE_LITE_OR_BUILDER_TYPENAME = ClassId.fromString("$PROTO_PACKAGE/MessageLiteOrBuilder")
+  val GENERATED_EXTENSION_TYPENAME = ClassId.fromString("$PROTO_PACKAGE/ExtensionLite")
 
   const val BUILD_CALL = "build()"
   const val GET_DEFAULT_INSTANCE_CALL = "getDefaultInstance()"

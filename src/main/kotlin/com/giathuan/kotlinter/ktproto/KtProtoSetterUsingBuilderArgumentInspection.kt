@@ -8,6 +8,7 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.codeInspection.ui.MultipleCheckboxOptionsPanel
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElementVisitor
+import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.idea.codeinsight.api.classic.inspections.AbstractKotlinInspection
 import org.jetbrains.kotlin.idea.intentions.callExpression
 import org.jetbrains.kotlin.idea.util.CommentSaver
@@ -32,19 +33,21 @@ class KtProtoSetterUsingBuilderArgumentInspection(
 
   override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor =
     dotQualifiedExpressionVisitor { element ->
-      if (
-        element.parent is KtDotQualifiedExpression ||
-        (!fixNonProtoSetterExpressions && !isArgumentOfSomeProtoSetter(element))
-      ) {
-        return@dotQualifiedExpressionVisitor
-      }
-      if (isJavaProtoMissingBuildExpression(element)) {
-        val lastSetter = element.callExpression as KtCallExpression
-        holder.registerProblem(
-          lastSetter.originalElement,
-          "Kotlinter: You should add a .build()",
-          AddBuildQuickFix(),
-        )
+      analyze(element) {
+        if (
+          element.parent is KtDotQualifiedExpression ||
+          (!fixNonProtoSetterExpressions && !isArgumentOfSomeProtoSetter(element))
+        ) {
+          return@dotQualifiedExpressionVisitor
+        }
+        if (isJavaProtoMissingBuildExpression(element)) {
+          val lastSetter = element.callExpression as KtCallExpression
+          holder.registerProblem(
+            lastSetter.originalElement,
+            "Kotlinter: You should add a .build()",
+            AddBuildQuickFix(),
+          )
+        }
       }
     }
 

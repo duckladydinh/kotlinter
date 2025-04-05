@@ -25,13 +25,11 @@ val intellijMinBuildVersion: String = config.getProperty("intellij.build.min.ver
 
 plugins {
   id("java")
-  kotlin("jvm") version "2.1.0"
-  id("org.jetbrains.intellij.platform") version "2.2.1"
+  kotlin("jvm") version "2.1.20"
+  id("org.jetbrains.intellij.platform") version "2.5.0"
 }
 
 group = "com.giathuan"
-
-version = "1.$intellijIdeVersion.$minorVersion"
 
 repositories {
   mavenCentral()
@@ -42,8 +40,10 @@ repositories {
 dependencies {
   intellijPlatform {
     intellijIdeaCommunity(intellijIdeVersion)
-    bundledPlugin("com.intellij.java")
     bundledPlugin("org.jetbrains.kotlin")
+    // Only for debugging:
+    // plugin("com.facebook.ktfmt_idea_plugin:1.2.0.54")
+    // plugin("com.google.idea.bazel.ijwb:2025.02.18.0.1-api-version-243")
     pluginVerifier()
     zipSigner()
     testFramework(TestFrameworkType.Platform)
@@ -51,28 +51,31 @@ dependencies {
   testImplementation(kotlin("test"))
 }
 
-java { sourceCompatibility = intellijJavaVersion }
+java {
+  sourceCompatibility = intellijJavaVersion
+  targetCompatibility = intellijJavaVersion
+}
 
 intellijPlatform {
   pluginConfiguration {
+    name = "kotlinter"
+    version = "1.$intellijIdeVersion.$minorVersion"
     ideaVersion {
       sinceBuild = intellijMinBuildVersion
       untilBuild = provider { null }
     }
   }
-  pluginVerification { ides { recommended() } }
 }
 
 tasks {
-  runIde { autoReload = true }
-
-  buildSearchableOptions { enabled = false }
-
-  signPlugin {
-    certificateChain.set(providers.environmentVariable("CERTIFICATE_CHAIN"))
-    privateKey.set(providers.environmentVariable("PRIVATE_KEY"))
-    password.set(providers.environmentVariable("PRIVATE_KEY_PASSWORD"))
+  // If there's PERMISSION_DENIED, run:
+  // $ chmod 777 -R /home/thuan/IdeaProjects/kotlinter/build/idea-sandbox/
+  runIde {
+    autoReload = true
+    jvmArgumentProviders += CommandLineArgumentProvider {
+      listOf("-Didea.kotlin.plugin.use.k2=true")
+    }
   }
-
+  buildSearchableOptions { enabled = false }
   publishPlugin { token.set(providers.environmentVariable("PUBLISH_TOKEN")) }
 }

@@ -1,29 +1,30 @@
-@file:Suppress("UnstableApiUsage")
-
 package com.giathuan.kotlinter.ktproto.support.parser
 
 import com.giathuan.kotlinter.ktproto.support.model.JavaProtoConstants
+import com.giathuan.kotlinter.ktproto.support.model.JavaProtoConstants.MESSAGE_LITE_OR_BUILDER_TYPENAME
+import com.giathuan.kotlinter.ktproto.support.model.JavaProtoConstants.MESSAGE_LITE_TYPENAME
+import com.giathuan.kotlinter.ktproto.support.model.JavaProtoConstants.NEW_BUILDER_CALL_NAME
+import com.giathuan.kotlinter.ktproto.support.model.JavaProtoConstants.TO_BUILDER_CALL
 import com.giathuan.kotlinter.ktproto.support.model.JavaProtoExpressionParsedData
 import com.giathuan.kotlinter.ktproto.support.model.JavaProtoExpressionType
 import com.giathuan.kotlinter.ktproto.support.model.KtProtoCreatorExpression
 import com.giathuan.kotlinter.ktproto.support.model.KtProtoCreatorExpression.Companion.buildKtProtoCreatorFunc
 import com.giathuan.kotlinter.ktproto.support.parser.DotQualifiedExpressionSplitter.splitDotQualifiedExpression
 import com.giathuan.kotlinter.ktproto.support.parser.SetterResolver.generateSingleSetter
-import com.giathuan.kotlinter.ktproto.support.utility.KtTypeVerifier.isBuilderOf
-import com.giathuan.kotlinter.ktproto.support.utility.KtTypeVerifier.isSubclassOf
 import com.intellij.psi.PsiElement
-import org.jetbrains.kotlin.idea.core.resolveType
+import org.jetbrains.kotlin.analysis.api.KaSession
+import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.idea.intentions.callExpression
+import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtValueArgument
 import org.jetbrains.kotlin.psi.KtValueArgumentList
-import org.jetbrains.kotlinx.serialization.compiler.backend.common.serialName
 
 /** Utilities to resolve different Java proto expressions. */
 object JavaProtoExpressionResolver {
   /** Returns myMessage {} for MyMessage.getDefaultInstance(). */
-  fun parseJavaGetDefaultInstanceExpression(
+  fun KaSession.parseJavaGetDefaultInstanceExpression(
     element: KtDotQualifiedExpression
   ): KtProtoCreatorExpression {
     val text = element.text
@@ -34,8 +35,7 @@ object JavaProtoExpressionResolver {
       throw invalid("It misses .getDefaultInstance() call: $text")
     }
 
-    val messageType = element.resolveType()
-    if (!messageType.isSubclassOf(JavaProtoConstants.MESSAGE_LITE_TYPENAME)) {
+    if (element.expressionType?.isSubtypeOf(MESSAGE_LITE_TYPENAME) != true) {
       throw invalid("The type is not MessageLite: $text")
     }
 
@@ -54,51 +54,48 @@ object JavaProtoExpressionResolver {
    */
   fun parseJavaProtoBuildExpression(
     element: KtDotQualifiedExpression
-  ): JavaProtoExpressionParsedData {
-    val text = element.text
-    val buildCallText =
-      element.callExpression?.text ?: throw invalid("The last part is not a call expression: $text")
+  ): JavaProtoExpressionParsedData =
+    analyze(element) {
+      val text = element.text
+      val buildCallText =
+        element.callExpression?.text
+          ?: throw invalid("The last part is not a call expression: $text")
 
-    if (buildCallText != JavaProtoConstants.BUILD_CALL) {
-      throw invalid("It misses .build() call: $text")
-    }
-
-    val messageType = element.resolveType()
-    val messageTypeSerialName = messageType?.serialName() ?: throw invalid("The type is null")
-    if (!messageType.isSubclassOf(JavaProtoConstants.MESSAGE_LITE_TYPENAME)) {
-      throw invalid("The type is not MessageLite: $text")
-    }
-
-    if (
-      !text.contains(JavaProtoConstants.NEW_BUILDER_CALL_NAME) &&
-      !text.contains(JavaProtoConstants.TO_BUILDER_CALL)
-    ) {
-      throw invalid("It misses builder calls: $element")
-    }
-
-    val parts = splitDotQualifiedExpression(element)
-    for (i in parts.size - 2 downTo 1) {
-      val part = parts[i]
-      if (part !is KtCallExpression) {
-        throw invalid("Expected a call expression: $part")
+      if (buildCallText != JavaProtoConstants.BUILD_CALL) {
+        throw invalid("It misses .build() call: $text")
       }
 
-      val partType = part.resolveType()
-      if (!partType.isBuilderOf(messageTypeSerialName)) {
-        throw invalid(
-          "Expected to be builder of $messageTypeSerialName but was ${partType?.serialName()}"
-        )
+      if (element.expressionType?.isSubtypeOf(MESSAGE_LITE_TYPENAME) != true) {
+        throw invalid("The type is not MessageLite: $text")
       }
 
-      // Stops if encounters .newBuilder() or .newBuilder(anotherMessage).
-      val builderCreatorType = JavaProtoExpressionType.toJavaBuilderExpressionType(part) ?: continue
-      return JavaProtoExpressionParsedData(parts, builderCreatorType, builderCreatorIndex = i)
+      if (!text.contains(NEW_BUILDER_CALL_NAME) && !text.contains(TO_BUILDER_CALL)) {
+        throw invalid("It misses builder calls: $element")
+      }
+
+      val builderType =
+        ClassId.fromString(element.expressionType.toString().trimEnd('!') + ".Builder")
+      val parts = splitDotQualifiedExpression(element)
+      for (i in parts.size - 2 downTo 1) {
+        val part = parts[i]
+        if (part !is KtCallExpression) {
+          throw invalid("Expected a call expression: $part")
+        }
+
+        if (part.expressionType?.isSubtypeOf(builderType) != true) {
+          throw invalid("Expected to be builder of $builderType but was ${part.expressionType}")
+        }
+
+        // Stops if encounters .newBuilder() or .newBuilder(anotherMessage).
+        val builderCreatorType =
+          JavaProtoExpressionType.toJavaBuilderExpressionType(part) ?: continue
+        return JavaProtoExpressionParsedData(parts, builderCreatorType, builderCreatorIndex = i)
+      }
+      throw invalid("Couldn't find builder creator call in correct location: $element")
     }
-    throw invalid("Couldn't find builder creator call in correct location: $element")
-  }
 
   /** Returns true for x if it's inside a setter MyMessage.newBuilder().setSomething(x). */
-  fun isArgumentOfSomeProtoSetter(element: KtDotQualifiedExpression): Boolean {
+  fun KaSession.isArgumentOfSomeProtoSetter(element: KtDotQualifiedExpression): Boolean {
     try {
       val parent = element.parent as KtValueArgument
       val grandParent = parent.parent as KtValueArgumentList
@@ -117,21 +114,17 @@ object JavaProtoExpressionResolver {
    * Returns true if it's an expression like MyMessage.newBuilder().setSomething(x) where .build()
    * is missing.
    */
-  fun isJavaProtoMissingBuildExpression(element: PsiElement): Boolean {
+  fun KaSession.isJavaProtoMissingBuildExpression(element: PsiElement): Boolean {
     try {
       if (element !is KtDotQualifiedExpression) {
         return false
       }
-      val messageType = element.resolveType()
-      if (!messageType.isSubclassOf(JavaProtoConstants.MESSAGE_LITE_OR_BUILDER_TYPENAME)) {
+      if (element.expressionType?.isSubtypeOf(MESSAGE_LITE_OR_BUILDER_TYPENAME) != true) {
         return false
       }
 
       val text = element.text
-      if (
-        !text.contains(JavaProtoConstants.NEW_BUILDER_CALL_NAME) &&
-        !text.contains(JavaProtoConstants.TO_BUILDER_CALL)
-      ) {
+      if (!text.contains(NEW_BUILDER_CALL_NAME) && !text.contains(TO_BUILDER_CALL)) {
         return false
       }
 

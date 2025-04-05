@@ -12,6 +12,8 @@ import com.giathuan.kotlinter.ktproto.support.utility.StringTransformer.unwrapRo
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.codeInspection.ui.MultipleCheckboxOptionsPanel
 import com.intellij.psi.PsiElementVisitor
+import org.jetbrains.kotlin.analysis.api.KaSession
+import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.idea.codeinsight.api.classic.inspections.AbstractKotlinInspection
 import org.jetbrains.kotlin.nj2k.isInSingleLine
 import org.jetbrains.kotlin.psi.KtCallExpression
@@ -33,21 +35,23 @@ class KtProtoCreationInspection(@JvmField var avoidThisExpression: Boolean = fal
 
   override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor =
     dotQualifiedExpressionVisitor { element ->
-      val dsl =
-        try {
-          val javaProtoExpressionParsedData = parseJavaProtoBuildExpression(element)
-          buildKtProtoDslFromJavaBuildExpression(javaProtoExpressionParsedData)
-        } catch (_: Throwable) {
-          return@dotQualifiedExpressionVisitor
-        }
-      holder.registerProblem(
-        element.originalElement,
-        "Kotlinter: Better DSL for proto builder is available in Kotlin",
-        ExpressionReplacerQuickFix(dsl, name = "Kotlinter: Transform to Kotlin DSL"),
-      )
+      analyze(element) {
+        val dsl =
+          try {
+            val javaProtoExpressionParsedData = parseJavaProtoBuildExpression(element)
+            buildKtProtoDslFromJavaBuildExpression(javaProtoExpressionParsedData)
+          } catch (_: Throwable) {
+            return@dotQualifiedExpressionVisitor
+          }
+        holder.registerProblem(
+          element.originalElement,
+          "Kotlinter: Better DSL for proto builder is available in Kotlin",
+          ExpressionReplacerQuickFix(dsl, name = "Kotlinter: Transform to Kotlin DSL"),
+        )
+      }
     }
 
-  private fun buildKtProtoDslFromJavaBuildExpression(
+  private fun KaSession.buildKtProtoDslFromJavaBuildExpression(
     javaProtoExpressionParsedData: JavaProtoExpressionParsedData
   ): String {
     val (parts, buildCreatorType, buildCreatorIndex) = javaProtoExpressionParsedData
