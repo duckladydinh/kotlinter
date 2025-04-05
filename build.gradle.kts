@@ -29,8 +29,6 @@ plugins {
   id("org.jetbrains.intellij.platform") version "2.5.0"
 }
 
-group = "com.giathuan"
-
 repositories {
   mavenCentral()
 
@@ -58,13 +56,14 @@ java {
 
 intellijPlatform {
   pluginConfiguration {
-    name = "kotlinter"
+    name = "Kotlinter"
     version = "1.$intellijIdeVersion.$minorVersion"
     ideaVersion {
       sinceBuild = intellijMinBuildVersion
       untilBuild = provider { null }
     }
   }
+  buildSearchableOptions = false
 }
 
 tasks {
