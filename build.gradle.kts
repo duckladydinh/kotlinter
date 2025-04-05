@@ -76,6 +76,5 @@ tasks {
       listOf("-Didea.kotlin.plugin.use.k2=true")
     }
   }
-  buildSearchableOptions { enabled = false }
   publishPlugin { token.set(providers.environmentVariable("PUBLISH_TOKEN")) }
 }
