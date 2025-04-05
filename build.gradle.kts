@@ -23,6 +23,8 @@ val intellijJavaVersion: JavaVersion = JavaVersion.toVersion(intellijJvmVersion.
 val intellijIdeVersion: String = config.getProperty("intellij.ide.version")
 val intellijMinBuildVersion: String = config.getProperty("intellij.build.min.version")
 
+version = "1.$intellijIdeVersion.$minorVersion"
+
 plugins {
   id("java")
   kotlin("jvm") version "2.1.20"
@@ -57,7 +59,6 @@ java {
 intellijPlatform {
   pluginConfiguration {
     name = "Kotlinter"
-    version = "1.$intellijIdeVersion.$minorVersion"
     ideaVersion {
       sinceBuild = intellijMinBuildVersion
       untilBuild = provider { null }
