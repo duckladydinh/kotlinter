@@ -8,6 +8,7 @@ import com.giathuan.kotlinter.ktproto.support.model.KtProtoCreatorExpression
 import com.giathuan.kotlinter.ktproto.support.model.KtProtoCreatorExpression.Companion.buildKtProtoCreatorFunc
 import com.giathuan.kotlinter.ktproto.support.parser.JavaProtoExpressionResolver.parseJavaProtoBuildExpression
 import com.giathuan.kotlinter.ktproto.support.parser.SetterResolver.buildSettersCode
+import com.giathuan.kotlinter.ktproto.support.utility.ElementAnalyzer.inSingleLine
 import com.giathuan.kotlinter.ktproto.support.utility.StringTransformer.unwrapRoundBracket
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.codeInspection.ui.MultipleCheckboxOptionsPanel
@@ -15,7 +16,6 @@ import com.intellij.psi.PsiElementVisitor
 import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.idea.codeinsight.api.classic.inspections.AbstractKotlinInspection
-import org.jetbrains.kotlin.nj2k.isInSingleLine
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.dotQualifiedExpressionVisitor
 import javax.swing.JComponent
@@ -72,7 +72,7 @@ class KtProtoCreationInspection(@JvmField var avoidThisExpression: Boolean = fal
       JavaProtoExpressionType.BUILD_FROM_NEW_BUILDER_SOURCE -> {
         val argWithBracket = (parts[buildCreatorIndex] as KtCallExpression).lastChild
         val copySrc =
-          if (argWithBracket.isInSingleLine()) unwrapRoundBracket(argWithBracket.text)
+          if (argWithBracket.inSingleLine()) unwrapRoundBracket(argWithBracket.text)
           else argWithBracket.text.trim()
         return object : KtProtoCopyExpression {
           override fun getCopySource(): String = copySrc

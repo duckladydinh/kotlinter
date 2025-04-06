@@ -1,9 +1,9 @@
 package com.giathuan.kotlinter.ktproto.support.model
 
+import com.giathuan.kotlinter.ktproto.support.utility.ElementAnalyzer.inSingleLine
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.idea.base.psi.getLineNumber
-import org.jetbrains.kotlin.nj2k.isInSingleLine
 import org.jetbrains.kotlin.psi.psiUtil.getPrevSiblingIgnoringWhitespace
 
 /** A model for preceding comments of some element. */
@@ -34,7 +34,7 @@ data class PrecedingCommentsBlock(val block: String, val firstCommentNotStarting
       val firstCommentNotStartingNewLine =
         comments.isNotEmpty() &&
             node != null &&
-            comments.first().isInSingleLine() &&
+            comments.first().inSingleLine() &&
             comments.first().getLineNumber(start = true) == node.getLineNumber(start = false)
 
       return PrecedingCommentsBlock(builder.toString(), firstCommentNotStartingNewLine)

@@ -2,7 +2,7 @@
  * To build the plugin for a particular .properties file, run the following command
  *
  * ```
- * ./gradlew signPlugin -Dconfig=IntelliJ242.properties -DminorVersion=$(git rev-parse --short HEAD)
+ * ./gradlew signPlugin -Dconfig=IntelliJ243.properties -DminorVersion=$(git rev-parse --short HEAD)
  *
  * ```
  *
@@ -14,7 +14,7 @@
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import java.util.*
 
-val configFile: String = System.getProperty("config", "IntelliJ242.properties")
+val configFile: String = System.getProperty("config", "IntelliJ243.properties")
 val minorVersion: String = System.getProperty("minorVersion", "unversioned")
 val config = Properties().apply { load(file("${rootProject.rootDir}/$configFile").inputStream()) }
 
@@ -23,7 +23,7 @@ val intellijJavaVersion: JavaVersion = JavaVersion.toVersion(intellijJvmVersion.
 val intellijIdeVersion: String = config.getProperty("intellij.ide.version")
 val intellijMinBuildVersion: String = config.getProperty("intellij.build.min.version")
 
-version = "1.$intellijIdeVersion.$minorVersion"
+version = "1.$intellijMinBuildVersion.$intellijIdeVersion.$minorVersion"
 
 plugins {
   id("java")
