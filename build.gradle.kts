@@ -40,6 +40,7 @@ repositories {
 dependencies {
   intellijPlatform {
     intellijIdeaCommunity(intellijIdeVersion)
+    // androidStudio("2024.3.1.13")
     bundledPlugin("org.jetbrains.kotlin")
     // Only for debugging:
     // plugin("com.facebook.ktfmt_idea_plugin:1.2.0.54")

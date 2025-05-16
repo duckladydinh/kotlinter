@@ -12,6 +12,7 @@ import com.giathuan.kotlinter.ktproto.support.utility.ElementAnalyzer.inSingleLi
 import com.giathuan.kotlinter.ktproto.support.utility.StringTransformer.unwrapRoundBracket
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.codeInspection.ui.MultipleCheckboxOptionsPanel
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.psi.PsiElementVisitor
 import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.analyze
@@ -20,16 +21,21 @@ import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.dotQualifiedExpressionVisitor
 import javax.swing.JComponent
 
+private val logger = Logger.getInstance(KtProtoCreationInspection::class.java)
+
 /**
  * An IntelliJ inspection to detect Java proto builder expression like
  * `MyMessage.newBuilder().setSomething(x).build()` and suggest transformation to Kotlin DSL like
  * `myMessage { this.something = x }`.
  */
-class KtProtoCreationInspection(@JvmField var avoidThisExpression: Boolean = false) :
-  AbstractKotlinInspection() {
+class KtProtoCreationInspection(
+  @JvmField var enableLogging: Boolean = false,
+  @JvmField var avoidThisExpression: Boolean = false,
+) : AbstractKotlinInspection() {
 
   override fun createOptionsPanel(): JComponent =
     MultipleCheckboxOptionsPanel(this).apply {
+      addCheckbox("Enable logging (expensive)", "enableLogging")
       addCheckbox("Avoid using `this.` expression (not recommended)", "avoidThisExpression")
     }
 
@@ -40,7 +46,13 @@ class KtProtoCreationInspection(@JvmField var avoidThisExpression: Boolean = fal
           try {
             val javaProtoExpressionParsedData = parseJavaProtoBuildExpression(element)
             buildKtProtoDslFromJavaBuildExpression(javaProtoExpressionParsedData)
-          } catch (_: Throwable) {
+          } catch (e: Throwable) {
+            if (enableLogging) {
+              logger.info(
+                "Kotlinter: Failed to parse Java proto .build() expression: ```\n${element.text}\n``` ",
+                e,
+              )
+            }
             return@dotQualifiedExpressionVisitor
           }
         holder.registerProblem(

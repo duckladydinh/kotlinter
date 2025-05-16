@@ -19,7 +19,7 @@ import org.jetbrains.kotlin.psi.dotQualifiedExpressionVisitor
 import javax.swing.JComponent
 
 /**
- * An IntelliJ inspection to detect Java proto builder without .build() call and suggest
+ * An IntelliJ inspection to detect Java proto builder without a .build() call and suggest
  * transformation to add .build() if it's a proto setter argument.
  */
 class KtProtoSetterUsingBuilderArgumentInspection(
