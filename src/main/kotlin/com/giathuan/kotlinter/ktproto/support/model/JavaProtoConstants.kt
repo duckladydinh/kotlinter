@@ -6,7 +6,7 @@ import org.jetbrains.kotlin.name.ClassId
 object JavaProtoConstants {
   private const val PROTO_PACKAGE = "com/google/protobuf"
   val MESSAGE_LITE_TYPENAME = ClassId.fromString("$PROTO_PACKAGE/MessageLite")
-  val MESSAGE_LITE_OR_BUILDER_TYPENAME = ClassId.fromString("$PROTO_PACKAGE/MessageLiteOrBuilder")
+  val MESSAGE_LITE_BUILDER_TYPENAME = ClassId.fromString("$PROTO_PACKAGE/MessageLite.Builder")
   val GENERATED_EXTENSION_TYPENAME = ClassId.fromString("$PROTO_PACKAGE/ExtensionLite")
 
   const val BUILD_CALL = "build()"

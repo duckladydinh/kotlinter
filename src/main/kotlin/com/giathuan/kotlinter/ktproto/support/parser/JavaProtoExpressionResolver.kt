@@ -1,7 +1,7 @@
 package com.giathuan.kotlinter.ktproto.support.parser
 
 import com.giathuan.kotlinter.ktproto.support.model.JavaProtoConstants
-import com.giathuan.kotlinter.ktproto.support.model.JavaProtoConstants.MESSAGE_LITE_OR_BUILDER_TYPENAME
+import com.giathuan.kotlinter.ktproto.support.model.JavaProtoConstants.MESSAGE_LITE_BUILDER_TYPENAME
 import com.giathuan.kotlinter.ktproto.support.model.JavaProtoConstants.MESSAGE_LITE_TYPENAME
 import com.giathuan.kotlinter.ktproto.support.model.JavaProtoConstants.NEW_BUILDER_CALL_NAME
 import com.giathuan.kotlinter.ktproto.support.model.JavaProtoConstants.TO_BUILDER_CALL
@@ -15,7 +15,6 @@ import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.idea.intentions.callExpression
-import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtValueArgument
@@ -73,8 +72,6 @@ object JavaProtoExpressionResolver {
         throw invalid("It misses builder calls: $element")
       }
 
-      val builderType =
-        ClassId.fromString(element.expressionType.toString().trimEnd('!') + ".Builder")
       val parts = splitDotQualifiedExpression(element)
       for (i in parts.size - 2 downTo 1) {
         val part = parts[i]
@@ -82,8 +79,8 @@ object JavaProtoExpressionResolver {
           throw invalid("Expected a call expression: $part")
         }
 
-        if (part.expressionType?.isSubtypeOf(builderType) != true) {
-          throw invalid("Expected to be builder of $builderType but was ${part.expressionType}")
+        if (part.expressionType?.isSubtypeOf(MESSAGE_LITE_BUILDER_TYPENAME) != true) {
+          throw invalid("Expected to be proto builder but was ${part.expressionType}")
         }
 
         // Stops if encounters .newBuilder() or .newBuilder(anotherMessage).
@@ -119,7 +116,7 @@ object JavaProtoExpressionResolver {
       if (element !is KtDotQualifiedExpression) {
         return false
       }
-      if (element.expressionType?.isSubtypeOf(MESSAGE_LITE_OR_BUILDER_TYPENAME) != true) {
+      if (element.expressionType?.isSubtypeOf(MESSAGE_LITE_BUILDER_TYPENAME) != true) {
         return false
       }
 
