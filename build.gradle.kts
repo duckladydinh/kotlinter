@@ -20,6 +20,7 @@ val config = Properties().apply { load(file("${rootProject.rootDir}/$configFile"
 
 val intellijJvmVersion: String = config.getProperty("intellij.jvm.version")
 val intellijJavaVersion: JavaVersion = JavaVersion.toVersion(intellijJvmVersion.toInt())
+val intellijKotlinVersion: Int = intellijJvmVersion.toInt()
 val intellijIdeVersion: String = config.getProperty("intellij.ide.version")
 val intellijMinBuildVersion: String = config.getProperty("intellij.build.min.version")
 
@@ -55,6 +56,12 @@ dependencies {
 java {
   sourceCompatibility = intellijJavaVersion
   targetCompatibility = intellijJavaVersion
+}
+
+kotlin {
+  jvmToolchain(intellijKotlinVersion)
+
+  compilerOptions { freeCompilerArgs.add("-Xcontext-parameters") }
 }
 
 intellijPlatform {
